@@ -5,17 +5,19 @@ from io import BytesIO
 import base64
 import os
 
-app = Flask(__name__)
-app.secret_key = 'tu_clave_secreta'  # Cambiar por una clave real en producción
+from flask import Flask, session, request
 
-# Datos iniciales
-if 'datos' not in session:
-    session['datos'] = {
-        'ingresos': 0,
-        'gastos': {'Comida': 0, 'Transporte': 0, 'Vivienda': 0, 'Otros': 0},
-        'deudas': 0,
-        'ahorros': 0
-    }
+app = Flask(__name__)
+
+@app.before_request
+def inicializar_datos():
+    if 'datos' not in session:
+        session['datos'] = {
+            'ingresos': 0,
+            'gastos': {'Comida': 0, 'Transporte': 0, 'Vivienda': 0, 'Otros': 0},
+            'deudas': 0,
+            'ahorros': 0
+        }
 
 @app.route('/')
 def index():
