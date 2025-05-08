@@ -32,19 +32,21 @@ def index():
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
     if request.method == 'POST':
-        # Actualizar datos de sesión
-        session['datos'] = {
-            'ingresos': float(request.form['ingresos']),
-            'gastos': {
-                'Comida': float(request.form['comida']),
-                'Transporte': float(request.form['transporte']),
-                'Vivienda': float(request.form['vivienda']),
-                'Otros': float(request.form['otros'])
-            },
-            'deudas': float(request.form['deudas']),
-            'ahorros': float(request.form['ahorros'])
-        }
-        session.modified = True
+        try:
+            session['datos'] = {
+                'ingresos': max(0, float(request.form['ingresos'])),
+                'gastos': {
+                    'Comida': max(0, float(request.form['comida'])),
+                    'Transporte': max(0, float(request.form['transporte'])),
+                    'Vivienda': max(0, float(request.form['vivienda'])),
+                    'Otros': max(0, float(request.form['otros']))
+                },
+                'deudas': max(0, float(request.form['deudas'])),
+                'ahorros': max(0, float(request.form['ahorros']))
+            }
+            session.modified = True
+        except ValueError:
+            flash('Error: Ingresa solo valores numéricos válidos')
         return redirect(url_for('registro'))
     
     return render_template('registro.html', datos=session['datos'])
@@ -65,32 +67,51 @@ def asistente():
 
 @app.route('/analizador')
 def analizador():
-    # Generar gráfico de pastel
-    img = BytesIO()
     gastos = session['datos']['gastos']
-    plt.figure(figsize=(6,6))
-    plt.pie(gastos.values(), labels=gastos.keys(), autopct='%1.1f%%')
-    plt.title('Distribución de Gastos')
-    plt.savefig(img, format='png')
-    plt.close()
-    img.seek(0)
-    plot_url = base64.b64encode(img.getvalue()).decode('utf8')
     
-    # Regla 50/30/20
-    ingresos = session['datos']['ingresos']
+    # Filtrar categorías con valores mayores a 0
+    valores = []
+    etiquetas = []
+    for categoria, monto in gastos.items():
+        if monto > 0:
+            valores.append(monto)
+            etiquetas.append(categoria)
+    
+    # Verificar si hay datos para graficar
+    if sum(valores) == 0 or len(valores) == 0:
+        plot_url = None
+    else:
+        # Generar gráfico de pastel
+        img = BytesIO()
+        plt.figure(figsize=(8, 8))
+        plt.pie(valores, 
+                labels=etiquetas,
+                autopct='%1.1f%%',
+                startangle=140)
+        plt.title('Distribución de Gastos')
+        plt.axis('equal')
+        plt.savefig(img, format='png')
+        plt.close()
+        img.seek(0)
+        plot_url = base64.b64encode(img.getvalue()).decode('utf8')
+    
+    # Regla 50/30/20 con validación
+    try:
+        ingresos = float(session['datos']['ingresos'])
+    except (KeyError, ValueError):
+        ingresos = 0
+        
     presupuesto = {
-        'necesidades': ingresos * 0.5,
-        'deseos': ingresos * 0.3,
-        'ahorro': ingresos * 0.2
+        'necesidades': ingresos * 0.5 if ingresos > 0 else 0,
+        'deseos': ingresos * 0.3 if ingresos > 0 else 0,
+        'ahorro': ingresos * 0.2 if ingresos > 0 else 0
     }
-    
+
     return render_template('analizador.html', 
                          plot_url=plot_url,
                          presupuesto=presupuesto)
 
 if __name__ == '__main__':
-     #app.run(host='0.0.0.0', port=port, debug=True)
-   
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
     app.run(debug=True)
