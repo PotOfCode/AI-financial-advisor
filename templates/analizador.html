@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="analizador-container">
+    <h1>📊 Analizador de Gastos</h1>
+    
+    <div class="grafico-section">
+        <h3>Distribución de Gastos</h3>
+        <img src="data:image/png;base64,{{ plot_url }}" alt="Gráfico de Gastos">
+    </div>
+
+    <div class="presupuesto-section">
+        <h3>Presupuesto Ideal (Regla 50/30/20)</h3>
+        <div class="presupuesto-item">
+            <label>Necesidades (50%):</label>
+            <span>${{ "%.2f"|format(presupuesto.necesidades) }}</span>
+            <div class="progress-bar" style="width: 50%"></div>
+        </div>
+        <div class="presupuesto-item">
+            <label>Deseos (30%):</label>
+            <span>${{ "%.2f"|format(presupuesto.deseos) }}</span>
+            <div class="progress-bar" style="width: 30%"></div>
+        </div>
+        <div class="presupuesto-item">
+            <label>Ahorro (20%):</label>
+            <span>${{ "%.2f"|format(presupuesto.ahorro) }}</span>
+            <div class="progress-bar" style="width: 20%"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="asistente-container">
+    <h1>🤖 Asistente de Finanzas IA</h1>
+    
+    <div class="consejo-box">
+        <h3>💡 Consejos de Ahorro</h3>
+        <ul>
+            {% for consejo in consejos.ahorro %}
+            <li>{{ consejo }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="consejo-box">
+        <h3>⚠️ Manejo de Deudas</h3>
+        <ul>
+            {% for consejo in consejos.deuda %}
+            <li>{{ consejo }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
