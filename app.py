@@ -1,16 +1,19 @@
 from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify
+import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
-import os
 import matplotlib
 matplotlib.use('Agg')
 from flask import Flask, session, request
 import os
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY')
+#app.secret_key = os.environ.get('SECRET_KEY')
+app.secret_key = 'IL4LbtIP4r'
+
 
 @app.before_request
 def inicializar_datos():
