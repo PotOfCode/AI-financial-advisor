@@ -48,4 +48,41 @@ body {
                                                                                                                         border-radius: 4px;
                                                                                                                             cursor: pointer;
                                                                                                                             }
+}/* Estilos para el Asistente IA */
+.asistente-container {
+    padding: 20px;
+}
+
+.consejo-box {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-left: 4px solid #4CAF50;
+}
+
+.consejo-box h3 {
+    color: #333;
+    margin-top: 0;
+}
+
+/* Estilos para el Analizador */
+.analizador-container {
+    padding: 20px;
+}
+
+.grafico-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.presupuesto-item {
+    margin-bottom: 15px;
+}
+
+.progress-bar {
+    height: 10px;
+    background-color: #4CAF50;
+    border-radius: 5px;
+    margin-top: 5px;
 }
