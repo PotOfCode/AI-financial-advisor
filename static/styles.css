@@ -1,54 +1,55 @@
 body {
-        font-family: Arial, sans-serif;
-            margin: 0;
-                padding: 20px;
-                    background-color: #f5f5f5;
-                    }
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
 
-                    nav {
-                        background-color: #333;
-                            padding: 15px;
-                                margin-bottom: 20px;
-                                }
+nav {
+    background-color: #333;
+    padding: 15px;
+    margin-bottom: 20px;
+}
 
-                                nav a {
-                                    color: white;
-                                        text-decoration: none;
-                                            margin-right: 20px;
-                                                padding: 10px;
-                                                }
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-right: 20px;
+    padding: 10px;
+}
 
-                                                .container {
-                                                    max-width: 800px;
-                                                        margin: 0 auto;
-                                                            background: white;
-                                                                padding: 20px;
-                                                                    border-radius: 8px;
-                                                                        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-                                                                        }
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
 
-                                                                        form {
-                                                                            display: grid;
-                                                                                grid-template-columns: 1fr 1fr;
-                                                                                    gap: 20px;
-                                                                                    }
+form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
 
-                                                                                    .form-column {
-                                                                                        display: flex;
-                                                                                            flex-direction: column;
-                                                                                                gap: 10px;
-                                                                                                }
+.form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
-                                                                                                button {
-                                                                                                    grid-column: span 2;
-                                                                                                        padding: 10px;
-                                                                                                            background-color: #4CAF50;
-                                                                                                                color: white;
-                                                                                                                    border: none;
-                                                                                                                        border-radius: 4px;
-                                                                                                                            cursor: pointer;
-                                                                                                                            }
-}/* Estilos para el Asistente IA */
+button {
+    grid-column: span 2;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Estilos para el Asistente IA */
 .asistente-container {
     padding: 20px;
 }
