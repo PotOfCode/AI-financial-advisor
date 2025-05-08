@@ -3,25 +3,25 @@
 {% block content %}
 <h1>Registro Financiero</h1>
 <form method="POST">
-    <div class="form-column">
-            <label>Ingresos Mensuales:</label>
-                    <input type="number" step="0.01" name="ingresos" value="{{ datos.ingresos }}" required>
-                            
-                                    <label>Deudas Totales:</label>
-                                            <input type="number" step="0.01" name="deudas" value="{{ datos.deudas }}" required>
-                                                </div>
-                                                    
-                                                        <div class="form-column">
-                                                                <h3>Gastos Mensuales</h3>
-                                                                        {% for categoria, valor in datos.gastos.items() %}
-                                                                                <label>{{ categoria }}:</label>
-                                                                                        <input type="number" step="0.01" name="{{ categoria.lower() }}" value="{{ valor }}" required>
-                                                                                                {% endfor %}
-                                                                                                        
-                                                                                                                <label>Ahorros Actuales:</label>
-                                                                                                                        <input type="number" step="0.01" name="ahorros" value="{{ datos.ahorros }}" required>
-                                                                                                                            </div>
-                                                                                                                                
-                                                                                                                                    <button type="submit">Actualizar Datos</button>
-                                                                                                                                    </form>
-                                                                                                                                    {% endblock %}
+        <div class="form-column">
+                <label>Ingresos Mensuales:</label>
+                <input type="number" step="0.01" name="ingresos" value="{{ datos.ingresos }}" required>
+
+                <label>Deudas Totales:</label>
+                <input type="number" step="0.01" name="deudas" value="{{ datos.deudas }}" required>
+        </div>
+
+        <div class="form-column">
+                <h3>Gastos Mensuales</h3>
+                {% for categoria, valor in datos.gastos.items() %}
+                <label>{{ categoria }}:</label>
+                <input type="number" step="0.01" name="{{ categoria.lower() }}" value="{{ valor }}" required>
+                {% endfor %}
+
+                <label>Ahorros Actuales:</label>
+                <input type="number" step="0.01" name="ahorros" value="{{ datos.ahorros }}" required>
+        </div>
+
+        <button type="submit">Actualizar Datos</button>
+</form>
+{% endblock %}
