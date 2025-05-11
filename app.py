@@ -28,7 +28,7 @@ def obtener_tasas():
         
         return jsonify({
             bcv = data['data']['USD']['exchange_rates']['bcv']
-promedio = data['data']['USD']['exchange_rates']['promedio']
+            promedio = data['data']['USD']['exchange_rates']['promedio']
         })
         
     except Exception as e:
