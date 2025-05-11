@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 from flask import Flask, render_template, request, jsonify
+import google.generativeai as genai
+#from google.generativeai import GenerativeModel
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -14,6 +16,18 @@ app = Flask(__name__)
 #app.secret_key = os.environ.get('SECRET_KEY')
 app.secret_key = 'IL4LbtIP4r'
 
+GOOGLE_API_KEY = os.environ.get(
+    'GEMINI_API_KEY', 'AIzaSyDwd3D2AFDF9MLzSSx7SPuHG9KVZcuQ6-M')  # Para desarrollo
+genai.configure(api_key=GOOGLE_API_KEY)
+
+
+# Inicialización segura del modelo
+
+def get_chat_session():
+    if 'chat' not in session:
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        session['chat'] = model.start_chat(history=[]).history
+    return genai.GenerativeModel('gemini-pro').start_chat(history=session['chat'])
 
 @app.before_request
 def inicializar_datos():
@@ -53,17 +67,30 @@ def registro():
 
 @app.route('/asistente')
 def asistente():
-    consejos = {
-        'ahorro': [
-            "Automatiza transferencias a ahorros cada mes",
-            "Reduce gastos pequeños recurrentes (cafés, snacks)"
-        ],
-        'deuda': [
-            "Paga primero las deudas con mayor interés",
-            "Considera consolidar deudas"
-        ]
-    }
-    return render_template('asistente.html', consejos=consejos)
+    return render_template('asistente.html')
+
+@app.route('/api/chat', methods=['POST'])
+def chat_handler():
+
+    try:
+        user_message = request.json.get('message', '')
+        chat = get_chat_session()
+        response = chat.send_message(
+            f"Como experto financiero, responde en español: {user_message}. "
+            "Si la pregunta no es financiera, explica que solo puedes ayudar con: "
+            "presupuestos, inversiones, ahorro, deudas y planificación financiera."
+        )
+        session['chat'] = chat.history
+        session.modified = True
+        return jsonify({
+            'response': response.text,
+            'status': 'success'
+        })
+    except Exception as e:
+        return jsonify({
+            'response': f"Error: {str(e)}",
+            'status': 'error'
+        }), 500
 
 @app.route('/analizador')
 def analizador():
