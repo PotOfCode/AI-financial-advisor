@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, session, redirect, url_for
 from flask import Flask, render_template, request, jsonify
 import google.generativeai as genai
 from flask import jsonify
+from flask import flash  # Añade esto al inicio
 #from google.generativeai import GenerativeModel
 import requests
 import pandas as pd
@@ -27,9 +28,9 @@ def obtener_tasas():
         data = response.json()
         
         return jsonify({
-            bcv = data['data']['USD']['exchange_rates']['bcv']
-            promedio = data['data']['USD']['exchange_rates']['promedio']
-        })
+    'bcv': data['data']['USD']['exchange_rates']['bcv'],  # ✅ Usa ":" y comillas en las claves
+    'promedio': data['data']['USD']['exchange_rates']['promedio']  # ✅
+})
         
     except Exception as e:
         return jsonify({
