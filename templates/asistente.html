@@ -63,20 +63,7 @@ async function sendMessage() {
 function appendMessage(text, type) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
-    
-    // Sanitización básica + estilos forzados
-    messageDiv.innerHTML = `
-        <div style="
-            all: initial; 
-            display: block !important;
-            font-size: 1rem !important; 
-            line-height: 1.5 !important;
-            color: ${type === 'user' ? 'white' : '#2c3e50'} !important;
-        ">
-            ${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
-        </div>
-    `;
-    
+    messageDiv.textContent = text;
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -113,17 +100,8 @@ userInput.addEventListener('keypress', (e) => {
     border-radius: 20px;
     max-width: 80%;
     word-break: break-word;
-    font-size: 1rem !important;  /* Tamaño base */
-    line-height: 1.5;
-    
-    /* Resetear todos los elementos internos */
-    all: initial;
-    * {
-        font-size: 1rem !important;
-        font-family: inherit !important;
-        color: inherit !important;
-        line-height: 1.5 !important;
-    }
+    font-size: 1rem !important;  /* Tamaño fijo */
+    line-height: 1.5;  /* Espaciado consistente */
 }
 
 /* Estilos para elementos anidados en mensajes */
@@ -151,24 +129,6 @@ userInput.addEventListener('keypress', (e) => {
 .message.error {
     background: #ffe3e3;
     color: #dc3545;
-}
-
-.message p,
-.message ul,
-.message ol,
-.message li,
-.message strong,
-.message em {
-    font-size: 1rem !important;
-    margin: 5px 0 !important;
-    padding: 0 !important;
-    font-weight: normal !important;
-}
-
-/* Asegurar que los links no cambien el estilo */
-.message a {
-    color: inherit !important;
-    text-decoration: underline !important;
 }
 
 .input-container {
