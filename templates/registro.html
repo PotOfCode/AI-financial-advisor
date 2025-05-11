@@ -40,13 +40,13 @@
                 <h3>🏷️ Gastos Mensuales</h3>
                 {% for categoria, valor in datos.gastos.items() %}
                 <div class="form-group">
-                    <label>{{ categoria }} (Bs):</label>
+                    <label>{{ categoria }}:</label>
                     <input type="number" step="0.01" name="{{ categoria.lower() }}" value="{{ valor }}" required>
                 </div>
                 {% endfor %}
                 
                 <div class="form-group">
-                    <label>Ahorros Actuales (Bs):</label>
+                    <label>Ahorros Actuales:</label>
                     <input type="number" step="0.01" name="ahorros" value="{{ datos.ahorros }}" required>
                 </div>
             </div>
