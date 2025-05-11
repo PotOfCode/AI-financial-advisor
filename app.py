@@ -13,6 +13,30 @@ matplotlib.use('Agg')
 from flask import Flask, session, request
 import os
 from flask_cors import CORS
+import requests
+from datetime import datetime, timedelta
+
+# Añade esta ruta antes de las demás
+@app.route('/api/tasas')
+def obtener_tasas():
+    try:
+        # API no oficial del BCV (ejemplo)
+        response = requests.get('https://pydolar-venezuela-api.vercel.app/api/v1/dollar/unit/bcv')
+        data = response.json()
+        
+        return jsonify({
+            'bcv': data.get('price', 0),
+            'fecha': datetime.now().strftime("%d-%m-%Y %H:%M"),
+            'promedio': data.get('promedio', 0)  # Si la API lo incluye
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'bcv': 36.10,  # Valor por defecto
+            'promedio': 37.50,
+            'error': True
+        })
+
 
 app = Flask(__name__)
 #app.secret_key = os.environ.get('SECRET_KEY')
