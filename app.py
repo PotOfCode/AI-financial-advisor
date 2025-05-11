@@ -34,8 +34,8 @@ def obtener_tasas():
         
     except Exception as e:
         return jsonify({
-            'bcv': 82.80,  # Valor por defecto
-            'promedio': 37.50,
+            'bcv': 92.83,  # Valor por defecto
+            'promedio': 103.64,
             'error': True
         })
 
