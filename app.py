@@ -23,18 +23,17 @@ app = Flask(__name__)
 def obtener_tasas():
     try:
         # API no oficial del BCV (ejemplo)
-        response = requests.get('https://pydolar-venezuela-api.vercel.app/api/v1/dollar/unit/bcv')
+        response = requests.get('https://monitordolarvzla.com/api/v1/exchange_rates/latest')
         data = response.json()
         
         return jsonify({
-            'bcv': data.get('price', 0),
-            'fecha': datetime.now().strftime("%d-%m-%Y %H:%M"),
-            'promedio': data.get('promedio', 0)  # Si la API lo incluye
+            bcv = data['data']['USD']['exchange_rates']['bcv']
+promedio = data['data']['USD']['exchange_rates']['promedio']
         })
         
     except Exception as e:
         return jsonify({
-            'bcv': 36.10,  # Valor por defecto
+            'bcv': 82.80,  # Valor por defecto
             'promedio': 37.50,
             'error': True
         })
