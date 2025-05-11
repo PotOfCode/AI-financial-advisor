@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 from flask import Flask, render_template, request, jsonify
 import google.generativeai as genai
+from flask import jsonify
 #from google.generativeai import GenerativeModel
 import requests
 import pandas as pd
@@ -11,10 +12,13 @@ import matplotlib
 matplotlib.use('Agg')
 from flask import Flask, session, request
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
 #app.secret_key = os.environ.get('SECRET_KEY')
 app.secret_key = 'IL4LbtIP4r'
+
+CORS(app)  # Permite solicitudes desde cualquier origen
 
 GOOGLE_API_KEY = os.environ.get(
     'GEMINI_API_KEY', 'AIzaSyDwd3D2AFDF9MLzSSx7SPuHG9KVZcuQ6-M')  # Para desarrollo
@@ -69,27 +73,37 @@ def registro():
 def asistente():
     return render_template('asistente.html')
 
+@app.errorhandler(404)
+@app.errorhandler(500)
+def handle_error(error):
+    return jsonify({
+        "status": "error",
+        "message": "Recurso no encontrado" if error.code == 404 else "Error interno del servidor"
+    }), error.code
+
 @app.route('/api/chat', methods=['POST'])
 def chat_handler():
-
     try:
-        user_message = request.json.get('message', '')
+        data = request.get_json()
+        user_message = data.get('message', '')
+        
+        # Validar entrada
+        if not user_message:
+            return jsonify({"status": "error", "message": "Mensaje vacío"}), 400
+            
+        # Lógica de Gemini
         chat = get_chat_session()
-        response = chat.send_message(
-            f"Como experto financiero, responde en español: {user_message}. "
-            "Si la pregunta no es financiera, explica que solo puedes ayudar con: "
-            "presupuestos, inversiones, ahorro, deudas y planificación financiera."
-        )
-        session['chat'] = chat.history
-        session.modified = True
+        response = chat.send_message(f"Como experto financiero: {user_message}")
+        
         return jsonify({
-            'response': response.text,
-            'status': 'success'
+            "response": response.text,
+            "status": "success"
         })
+        
     except Exception as e:
         return jsonify({
-            'response': f"Error: {str(e)}",
-            'status': 'error'
+            "status": "error",
+            "message": "Error al procesar la solicitud"
         }), 500
 
 @app.route('/analizador')
