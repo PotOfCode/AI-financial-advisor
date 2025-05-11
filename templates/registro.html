@@ -1,27 +1,187 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Registro Financiero</h1>
-<form method="POST">
-        <div class="form-column">
-                <label>Ingresos Mensuales:</label>
-                <input type="number" step="0.01" name="ingresos" value="{{ datos.ingresos }}" required>
-
-                <label>Deudas Totales:</label>
-                <input type="number" step="0.01" name="deudas" value="{{ datos.deudas }}" required>
+<div class="container">
+    <!-- Sección de Tasas de Cambio -->
+    <div class="tasa-container">
+        <h2>💱 Tasas de Cambio Actuales</h2>
+        <div class="tasa-box">
+            <div class="tasa-item">
+                <span>Dólar BCV:</span>
+                <strong id="tasaBcv">Cargando...</strong>
+            </div>
+            <div class="tasa-item">
+                <span>Dólar Promedio:</span>
+                <strong id="tasaPromedio">Cargando...</strong>
+            </div>
+            <small id="actualizacion">Última actualización: -</small>
         </div>
+    </div>
 
-        <div class="form-column">
-                <h3>Gastos Mensuales</h3>
+    <!-- Formulario de Registro -->
+    <h1>📝 Registro Financiero</h1>
+    <form method="POST" class="finance-form">
+        <div class="form-columns">
+            <!-- Columna 1 -->
+            <div class="form-column">
+                <div class="form-group">
+                    <label>Ingresos Mensuales (Bs):</label>
+                    <input type="number" step="0.01" name="ingresos" value="{{ datos.ingresos }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Deudas Totales (Bs):</label>
+                    <input type="number" step="0.01" name="deudas" value="{{ datos.deudas }}" required>
+                </div>
+            </div>
+
+            <!-- Columna 2 -->
+            <div class="form-column">
+                <h3>🏷️ Gastos Mensuales</h3>
                 {% for categoria, valor in datos.gastos.items() %}
-                <label>{{ categoria }}:</label>
-                <input type="number" step="0.01" name="{{ categoria.lower() }}" value="{{ valor }}" required>
+                <div class="form-group">
+                    <label>{{ categoria }} (Bs):</label>
+                    <input type="number" step="0.01" name="{{ categoria.lower() }}" value="{{ valor }}" required>
+                </div>
                 {% endfor %}
-
-                <label>Ahorros Actuales:</label>
-                <input type="number" step="0.01" name="ahorros" value="{{ datos.ahorros }}" required>
+                
+                <div class="form-group">
+                    <label>Ahorros Actuales (Bs):</label>
+                    <input type="number" step="0.01" name="ahorros" value="{{ datos.ahorros }}" required>
+                </div>
+            </div>
         </div>
 
-        <button type="submit">Actualizar Datos</button>
-</form>
+        <button type="submit" class="submit-btn">💾 Actualizar Datos</button>
+    </form>
+</div>
+
+<script>
+// Obtener y mostrar tasas de cambio
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('/api/tasas')
+    .then(response => response.json())
+    .then(data => {
+        const formatter = new Intl.NumberFormat('es-VE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        document.getElementById('tasaBcv').textContent = `Bs. ${formatter.format(data.bcv)}`;
+        document.getElementById('tasaPromedio').textContent = `Bs. ${formatter.format(data.promedio)}`;
+        document.getElementById('actualizacion').textContent = `Actualizado: ${data.fecha}`;
+        
+        if(data.error) {
+            document.getElementById('actualizacion').textContent += ' (Datos locales)';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('tasaBcv').textContent = 'No disponible';
+        document.getElementById('tasaPromedio').textContent = 'No disponible';
+    });
+});
+</script>
+
+<style>
+/* Estilos para tasas de cambio */
+.tasa-container {
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.tasa-box {
+    display: grid;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.tasa-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.tasa-item span {
+    color: #6c757d;
+    font-size: 0.95rem;
+}
+
+.tasa-item strong {
+    color: #2c3e50;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+#actualizacion {
+    text-align: right;
+    display: block;
+    margin-top: 10px;
+    color: #7f8c8d;
+    font-size: 0.85rem;
+}
+
+/* Estilos existentes actualizados */
+.container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.form-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.form-group input {
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.submit-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    margin-top: 20px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.submit-btn:hover {
+    background: #38a169;
+}
+</style>
 {% endblock %}
