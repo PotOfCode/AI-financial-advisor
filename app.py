@@ -27,7 +27,7 @@ def get_chat_session():
     if 'chat' not in session:
         model = genai.GenerativeModel('gemini-2.0-flash')
         session['chat'] = model.start_chat(history=[]).history
-    return genai.GenerativeModel('gemini-pro').start_chat(history=session['chat'])
+    return genai.GenerativeModel('gemini-2.0-flash').start_chat(history=session['chat'])
 
 @app.before_request
 def inicializar_datos():
