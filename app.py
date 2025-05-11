@@ -16,6 +16,8 @@ from flask_cors import CORS
 import requests
 from datetime import datetime, timedelta
 
+
+app = Flask(__name__)
 # Añade esta ruta antes de las demás
 @app.route('/api/tasas')
 def obtener_tasas():
@@ -37,8 +39,6 @@ def obtener_tasas():
             'error': True
         })
 
-
-app = Flask(__name__)
 #app.secret_key = os.environ.get('SECRET_KEY')
 app.secret_key = 'IL4LbtIP4r'
 
