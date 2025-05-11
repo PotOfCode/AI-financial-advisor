@@ -100,6 +100,19 @@ userInput.addEventListener('keypress', (e) => {
     border-radius: 20px;
     max-width: 80%;
     word-break: break-word;
+    font-size: 1rem !important;  /* Tamaño fijo */
+    line-height: 1.5;  /* Espaciado consistente */
+}
+
+/* Estilos para elementos anidados en mensajes */
+.message ul, .message ol {
+    margin: 5px 0;
+    padding-left: 25px;
+}
+
+.message li, .message p {
+    font-size: 1rem !important;  /* Tamaño heredado */
+    margin: 3px 0;
 }
 
 .message.user {
