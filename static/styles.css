@@ -87,3 +87,33 @@ button {
     border-radius: 5px;
     margin-top: 5px;
 }
+
+/* Estilos base (para todos los dispositivos) */
+.container {
+    width: 90%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Pantallas grandes (PCs, > 768px) */
+@media (min-width: 768px) {
+    .container {
+        width: 70%;
+    }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Dos columnas */
+    }
+}
+
+/* Pantallas pequeñas (móviles, < 768px) */
+@media (max-width: 767px) {
+    .menu {
+        flex-direction: column; /* Apila elementos verticalmente */
+    }
+
+    button {
+        width: 100%; /* Botones ocupen todo el ancho */
+    }
+}
