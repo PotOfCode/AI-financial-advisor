@@ -118,7 +118,8 @@ def chat_handler():
         # Lógica de Gemini
         chat = get_chat_session()
         response = chat.send_message(
-            f"Responde como experto financiero usando solo texto plano. "
+            f"Responde como experto financiero usando EXCLUSIVAMENTE texto plano sin formato. "
+            f"Prohibido usar: Markdown, HTML, listas con viñetas, encabezados o símbolos especiales. "
             f"Evita cualquier formato especial, listas con viñetas o encabezados. "
             f"Pregunta: {user_message}"
         )
