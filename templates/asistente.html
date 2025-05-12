@@ -63,7 +63,14 @@ async function sendMessage() {
 function appendMessage(text, type) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
-    messageDiv.textContent = text;
+    
+    // Limpiar formato no deseado
+    const cleanText = text
+        .replace(/<\/?[^>]+(>|$)/g, "")  // Eliminar HTML
+        .replace(/#+/g, "")              // Eliminar encabezados Markdown
+        .replace(/\*\*/g, "");           // Eliminar negritas
+    
+    messageDiv.textContent = cleanText;
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -100,19 +107,28 @@ userInput.addEventListener('keypress', (e) => {
     border-radius: 20px;
     max-width: 80%;
     word-break: break-word;
-    font-size: 1rem !important;  /* Tamaño fijo */
-    line-height: 1.5;  /* Espaciado consistente */
+    font-size: 1rem !important;
+    line-height: 1.5;
 }
 
-/* Estilos para elementos anidados en mensajes */
+/* Reset completo para elementos anidados */
+.message * {
+    font-size: inherit !important;
+    margin: 0;
+    padding: 0;
+    line-height: inherit;
+    font-family: inherit;
+    color: inherit;
+}
+
 .message ul, .message ol {
-    margin: 5px 0;
-    padding-left: 25px;
+    margin: 5px 0 !important;
+    padding-left: 25px !important;
+    list-style-position: inside;
 }
 
-.message li, .message p {
-    font-size: 1rem !important;  /* Tamaño heredado */
-    margin: 3px 0;
+.message strong {
+    font-weight: bold;
 }
 
 .message.user {
