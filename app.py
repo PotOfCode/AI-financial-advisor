@@ -1,5 +1,9 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 from flask import Flask, render_template, request, jsonify
+import google.generativeai as genai
+from flask import jsonify
+from flask import flash  # Añade esto al inicio
+#from google.generativeai import GenerativeModel
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,11 +13,49 @@ import matplotlib
 matplotlib.use('Agg')
 from flask import Flask, session, request
 import os
+from flask_cors import CORS
+import requests
+from datetime import datetime, timedelta
+
 
 app = Flask(__name__)
+# Añade esta ruta antes de las demás
+@app.route('/api/tasas')
+def obtener_tasas():
+    try:
+        # API no oficial del BCV (ejemplo)
+        response = requests.get('https://monitordolarvzla.com/api/v1/exchange_rates/latest')
+        data = response.json()
+        
+        return jsonify({
+    'bcv': data['data']['USD']['exchange_rates']['bcv'],  # ✅ Usa ":" y comillas en las claves
+    'promedio': data['data']['USD']['exchange_rates']['promedio']  # ✅
+})
+        
+    except Exception as e:
+        return jsonify({
+            'bcv': 92.83,  # Valor por defecto
+            'promedio': 103.64,
+            'error': True
+        })
+
 #app.secret_key = os.environ.get('SECRET_KEY')
 app.secret_key = 'IL4LbtIP4r'
 
+CORS(app)  # Permite solicitudes desde cualquier origen
+
+GOOGLE_API_KEY = os.environ.get(
+    'GEMINI_API_KEY', 'AIzaSyDwd3D2AFDF9MLzSSx7SPuHG9KVZcuQ6-M')  # Para desarrollo
+genai.configure(api_key=GOOGLE_API_KEY)
+
+
+# Inicialización segura del modelo
+
+def get_chat_session():
+    if 'chat' not in session:
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        session['chat'] = model.start_chat(history=[]).history
+    return genai.GenerativeModel('gemini-2.0-flash').start_chat(history=session['chat'])
 
 @app.before_request
 def inicializar_datos():
@@ -53,17 +95,40 @@ def registro():
 
 @app.route('/asistente')
 def asistente():
-    consejos = {
-        'ahorro': [
-            "Automatiza transferencias a ahorros cada mes",
-            "Reduce gastos pequeños recurrentes (cafés, snacks)"
-        ],
-        'deuda': [
-            "Paga primero las deudas con mayor interés",
-            "Considera consolidar deudas"
-        ]
-    }
-    return render_template('asistente.html', consejos=consejos)
+    return render_template('asistente.html')
+
+@app.errorhandler(404)
+@app.errorhandler(500)
+def handle_error(error):
+    return jsonify({
+        "status": "error",
+        "message": "Recurso no encontrado" if error.code == 404 else "Error interno del servidor"
+    }), error.code
+
+@app.route('/api/chat', methods=['POST'])
+def chat_handler():
+    try:
+        data = request.get_json()
+        user_message = data.get('message', '')
+        
+        # Validar entrada
+        if not user_message:
+            return jsonify({"status": "error", "message": "Mensaje vacío"}), 400
+            
+        # Lógica de Gemini
+        chat = get_chat_session()
+        response = chat.send_message(f"Como experto financiero: {user_message}")
+        
+        return jsonify({
+            "response": response.text,
+            "status": "success"
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": "Error al procesar la solicitud"
+        }), 500
 
 @app.route('/analizador')
 def analizador():

@@ -38,14 +38,17 @@ async function sendMessage() {
     try {
         const response = await fetch('/api/chat', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'},
             body: JSON.stringify({message: message})
         });
         
         const data = await response.json();
         
-        if (data.status === 'error') {
-            throw new Error(data.response);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: "Error desconocido" }));
+            throw new Error(errorData.message || "Error en el servidor");
         }
         
         appendMessage(data.response, 'bot');
@@ -97,6 +100,19 @@ userInput.addEventListener('keypress', (e) => {
     border-radius: 20px;
     max-width: 80%;
     word-break: break-word;
+    font-size: 1rem !important;  /* Tamaño fijo */
+    line-height: 1.5;  /* Espaciado consistente */
+}
+
+/* Estilos para elementos anidados en mensajes */
+.message ul, .message ol {
+    margin: 5px 0;
+    padding-left: 25px;
+}
+
+.message li, .message p {
+    font-size: 1rem !important;  /* Tamaño heredado */
+    margin: 3px 0;
 }
 
 .message.user {
