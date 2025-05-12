@@ -54,8 +54,8 @@ genai.configure(api_key=GOOGLE_API_KEY)
 def get_chat_session():
     # Configuración para respuestas cortas
     generation_config = genai.GenerationConfig(
-        max_output_tokens=100,  # Límite de ~100 caracteres
-        temperature=0.3,        # Menos creatividad, más precisión
+        max_output_tokens=200,  # Límite de ~100 caracteres
+        temperature=0.5,        # Menos creatividad, más precisión
         top_p=0.7
     )
 
