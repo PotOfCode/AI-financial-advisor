@@ -60,17 +60,29 @@ async function sendMessage() {
     }
 }
 
+function cleanResponse(text) {
+    return text
+        .replace(/<\/?[^>]+(>|$)/g, '') // Eliminar HTML
+        .replace(/#{1,6}/g, '')          // Quitar encabezados Markdown
+        .replace(/\*\*/g, '')            // Eliminar negritas
+        .replace(/`{3}/g, '');           // Quitar bloques de código
+}
+
 function appendMessage(text, type) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
     
-    // Limpiar formato no deseado
-    const cleanText = text
-        .replace(/<\/?[^>]+(>|$)/g, "")  // Eliminar HTML
-        .replace(/#+/g, "")              // Eliminar encabezados Markdown
-        .replace(/\*\*/g, "");           // Eliminar negritas
+    // Texto limpio y normalizado
+    const cleanText = cleanResponse(text)
+        .replace(/\n/g, '<br>'); // Convertir saltos de línea
     
-    messageDiv.textContent = cleanText;
+    messageDiv.innerHTML = `<div class="message-content">${cleanText}</div>`;
+    
+    // Forzar estilos incluso si el navegador intenta cambiarlos
+    messageDiv.querySelectorAll('*').forEach(element => {
+        element.style.cssText = 'font-size: 1rem !important; line-height: 1.5 !important;';
+    });
+    
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
