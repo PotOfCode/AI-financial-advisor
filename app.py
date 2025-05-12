@@ -117,7 +117,11 @@ def chat_handler():
             
         # Lógica de Gemini
         chat = get_chat_session()
-        response = chat.send_message(f"Como experto financiero: {user_message}")
+        response = chat.send_message(
+            f"Responde como experto financiero usando solo texto plano. "
+            f"Evita cualquier formato especial, listas con viñetas o encabezados. "
+            f"Pregunta: {user_message}"
+        )
         
         return jsonify({
             "response": response.text,
