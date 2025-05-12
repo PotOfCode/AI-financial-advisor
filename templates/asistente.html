@@ -113,18 +113,24 @@ userInput.addEventListener('keypress', (e) => {
 
 /* Reset completo para elementos anidados */
 .message * {
-    font-size: inherit !important;
-    margin: 0;
-    padding: 0;
-    line-height: inherit;
-    font-family: inherit;
-    color: inherit;
+    all: revert !important; /* Anula cualquier estilo heredado */
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    font-family: system-ui, sans-serif !important;
+    color: inherit !important;
 }
 
+/* Eliminar márgenes en listas */
 .message ul, .message ol {
-    margin: 5px 0 !important;
-    padding-left: 25px !important;
-    list-style-position: inside;
+    margin: 0 !important;
+    padding-left: 1.5rem !important;
+}
+
+/* Bloquear tamaño de texto en elementos específicos */
+.message h1, .message h2, .message h3, 
+.message li, .message p, .message strong {
+    font-size: 1rem !important;
+    font-weight: normal !important;
 }
 
 .message strong {
