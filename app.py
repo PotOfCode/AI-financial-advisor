@@ -52,31 +52,11 @@ genai.configure(api_key=GOOGLE_API_KEY)
 # Inicialización segura del modelo
 
 def get_chat_session():
-    # Configuración para respuestas cortas
-    generation_config = genai.GenerationConfig(
-        max_output_tokens=200,  # Límite de ~100 caracteres
-        temperature=0.5,        # Menos creatividad, más precisión
-        top_p=0.7
-    )
+    if 'chat' not in session:
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        session['chat'] = model.start_chat(history=[]).history
+    return genai.GenerativeModel('gemini-2.0-flash').start_chat(history=session['chat'])
 
-    if 'chat_history' not in session:
-        model = genai.GenerativeModel(
-            'gemini-2.0-flash',
-            generation_config=generation_config  # <-- ¡Añade esto!
-        )
-        chat = model.start_chat(history=[])
-        session['chat_history'] = [msg._asdict() for msg in chat.history]
-    
-    # Reconstruir con la configuración
-    model = genai.GenerativeModel(
-        'gemini-2.0-flash',
-        generation_config=generation_config  # <-- Configuración aplicada
-    )
-    chat = model.start_chat(history=[
-        genai.types.ContentType(**msg) for msg in session['chat_history']
-    ])
-    
-    return chat
 @app.before_request
 def inicializar_datos():
     if 'datos' not in session:
