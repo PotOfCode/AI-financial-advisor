@@ -287,5 +287,26 @@ document.addEventListener('DOMContentLoaded', () => {
         background: #48bb78;
     }
 }
+
+@media (max-width: 480px) {
+    .responsive-button {
+        position: fixed;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 95%;
+        max-width: 400px;
+        border-radius: 25px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        padding: 16px;
+        margin: 0;
+        z-index: 1000;
+    }
+
+    .responsive-form-container {
+        padding-bottom: 80px; /* Espacio para el botón fijo */
+    }
+}
+
 </style>
 {% endblock %}
