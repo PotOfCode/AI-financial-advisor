@@ -88,3 +88,39 @@ button {
     border-radius: 5px;
     margin-top: 5px;
 }
+
+/* Media Queries (Adapta estilos por dispositivo) */
+@media (max-width: 768px) {
+    /* Navegación móvil */
+    .nav-links {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .nav-links.active {
+        display: flex;
+    }
+
+    /* Ajustes de formulario móvil */
+    .form-group {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Chat en móviles */
+    .message-bubble {
+        max-width: 90% !important;
+        font-size: 14px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    /* Estilos para tabletas */
+    .content-container {
+        padding: 1.5rem;
+    }
+}
+
+/* Unidades fluidas para textos */
+h1 { font-size: clamp(1.5rem, 4vw, 2rem); }
+p { font-size: clamp(1rem, 2.5vw, 1.1rem); }
