@@ -131,47 +131,40 @@ nav {
     display: flex;
     align-items: center;
     padding: 1rem;
-    background: #2d3748; /* Color oscuro principal */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Sombra más pronunciada */
-    color: white; /* Color de texto general */
+    background: #2d3748; /* Fondo oscuro de la barra principal */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* Menú desplegable móvil */
 .mobile-menu {
-    background: #2d3748; /* Mismo color oscuro que la barra */
-    border: 1px solid #4a5568; /* Borde sutil */
+    background: #ffffff; /* Fondo blanco para el menú */
+    border: 1px solid #e2e8f0; /* Borde claro */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Sombra suave */
 }
 
 .mobile-menu a {
     padding: 12px;
     text-decoration: none;
-    color: #e2e8f0; /* Texto claro */
-    border-bottom: 1px solid #4a5568; /* Borde más oscuro */
+    color: #2d3748; /* Texto oscuro */
+    border-bottom: 1px solid #edf2f7; /* Borde claro entre opciones */
 }
 
-.mobile-menu a:last-child {
-    border-bottom: none;
+.mobile-menu a:hover {
+    background: #f7fafc; /* Fondo gris claro al hover */
 }
 
-/* Estilos para escritorio */
+/* Botón del menú móvil */
+.nav-toggle {
+    color: white; /* Color del ícono ☰ en la barra oscura */
+}
+
+/* Versión escritorio (mantiene colores oscuros) */
 @media (min-width: 769px) {
-    .nav-links {
-        display: flex !important;
+    .nav-links a {
+        color: #cbd5e0; /* Texto claro semi-transparente */
     }
     
-    .nav-links a {
-        padding: 0.5rem 1rem;
-        text-decoration: none;
-        color: #cbd5e0; /* Texto claro semi-transparente */
-        transition: all 0.3s;
-    }
-
     .nav-links a:hover {
-        color: #ffffff; /* Blanco puro al hover */
-        background: rgba(255,255,255,0.05); /* Efecto sutil de hover */
+        color: #ffffff; /* Blanco al hover */
     }
 }
-
-/* Añadir para el botón del menú móvil */
-.nav-toggle {
-    color: white; /* Color del icono ☰ */
-        }
