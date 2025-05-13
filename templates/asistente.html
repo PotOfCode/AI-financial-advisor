@@ -2,214 +2,212 @@
 
 {% block content %}
 <div class="chat-container">
-    <h1>🧠 Asistente Financiero IA</h1>
-    
+    <h1 class="chat-title">🧠 Asistente Financiero IA</h1>
+
     <div class="chat-box" id="chatBox">
-        <div class="message bot">
-            ¡Hola! Soy tu experto en finanzas personales. ¿En qué puedo ayudarte hoy?
+        <div class="message bot-message">
+            <div class="message-content">¡Hola! Soy tu experto en finanzas personales. ¿En qué puedo ayudarte hoy?</div>
         </div>
     </div>
-    
-    <div class="input-container">
-        <input type="text" id="userInput" placeholder="Escribe tu pregunta financiera...">
-        <button onclick="sendMessage()">Enviar</button>
+
+    <div class="input-area">
+        <input type="text" id="userInput" class="chat-input" placeholder="Escribe tu pregunta financiera..." aria-label="Escribe tu mensaje">
+        <button class="send-button" onclick="sendMessage()">Enviar</button>
     </div>
-    
-    <div id="loading" class="hidden">
-        <div class="loader"></div>
-        <p>Procesando...</p>
+
+    <div id="loadingIndicator" class="loading-hidden">
+        <div class="spinner"></div>
+        <span class="loading-text">Procesando...</span>
     </div>
 </div>
 
 <script>
+// Elementos del DOM
 const chatBox = document.getElementById('chatBox');
 const userInput = document.getElementById('userInput');
-const loading = document.getElementById('loading');
+const loadingIndicator = document.getElementById('loadingIndicator');
 
+// Función para sanitizar texto
+const sanitizeText = (text) => {
+    return text
+        .replace(/<\/?[^>]+(>|$)/g, '')  // Eliminar HTML
+        .replace(/[*#_`~]/g, '')         // Eliminar markdown
+        .replace(/\n{2,}/g, '\n')        // Reducir saltos múltiples
+        .trim();
+};
+
+// Función para crear mensajes
+const createMessage = (text, type) => {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}-message`;
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    contentDiv.textContent = sanitizeText(text);
+    
+    messageDiv.appendChild(contentDiv);
+    return messageDiv;
+};
+
+// Función principal
 async function sendMessage() {
     const message = userInput.value.trim();
     if (!message) return;
 
     // Mostrar mensaje del usuario
-    appendMessage(message, 'user');
+    chatBox.appendChild(createMessage(message, 'user'));
     userInput.value = '';
-    loading.classList.remove('hidden');
+    loadingIndicator.classList.remove('loading-hidden');
 
     try {
         const response = await fetch('/api/chat', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'},
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({message: message})
         });
+
+        if (!response.ok) throw new Error('Error en la respuesta');
         
         const data = await response.json();
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: "Error desconocido" }));
-            throw new Error(errorData.message || "Error en el servidor");
-        }
-        
-        appendMessage(data.response, 'bot');
-        
+        chatBox.appendChild(createMessage(data.response, 'bot'));
+
     } catch (error) {
-        appendMessage(`Error: ${error.message}`, 'error');
+        chatBox.appendChild(createMessage(`Error: ${error.message}`, 'error'));
     } finally {
-        loading.classList.add('hidden');
+        loadingIndicator.classList.add('loading-hidden');
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
 }
 
-function cleanResponse(text) {
-    return text
-        .replace(/<\/?[^>]+(>|$)/g, '') // Eliminar HTML
-        .replace(/#{1,6}/g, '')          // Quitar encabezados Markdown
-        .replace(/\*\*/g, '')            // Eliminar negritas
-        .replace(/`{3}/g, '');           // Quitar bloques de código
-}
-
-function appendMessage(text, type) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    
-    // Texto limpio y normalizado
-    const cleanText = cleanResponse(text)
-        .replace(/\n/g, '<br>'); // Convertir saltos de línea
-    
-    messageDiv.innerHTML = `<div class="message-content">${cleanText}</div>`;
-    
-    // Forzar estilos incluso si el navegador intenta cambiarlos
-    messageDiv.querySelectorAll('*').forEach(element => {
-        element.style.cssText = 'font-size: 1rem !important; line-height: 1.5 !important;';
-    });
-    
-    chatBox.appendChild(messageDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// Enviar con Enter
+// Evento para enviar con Enter
 userInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
 </script>
 
 <style>
+/* Reset completo */
+.chat-container * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Contenedor principal */
 .chat-container {
     max-width: 800px;
-    margin: 2rem auto;
+    margin: 20px auto;
     padding: 20px;
     background: #f8f9fa;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
 
+/* Área de chat */
 .chat-box {
     height: 500px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 20px;
+    padding: 15px;
     margin-bottom: 20px;
     overflow-y: auto;
     background: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
 }
 
+/* Mensajes base */
 .message {
+    max-width: 85%;
     margin: 10px 0;
-    padding: 12px 18px;
-    border-radius: 20px;
-    max-width: 80%;
+    border-radius: 18px;
+    font-size: 15px;
+    line-height: 1.45;
+    position: relative;
+}
+
+/* Contenido del mensaje */
+.message-content {
+    padding: 12px 16px;
     word-break: break-word;
-    font-size: 16px;
-    line-height: 1.5;
+    white-space: pre-wrap;
 }
 
-/* Reset completo para elementos anidados */
-.message * {
-    all: revert !important; /* Anula cualquier estilo heredado */
-    font-size: 16px;
-    line-height: 1.5 !important;
-    font-family: system-ui, sans-serif !important;
-    color: inherit !important;
+/* Mensajes del bot */
+.bot-message {
+    background: #f1f3f4;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
 }
 
-/* Eliminar márgenes en listas */
-.message ul, .message ol {
-    margin: 0 !important;
-    padding-left: 1.5rem !important;
-}
-
-/* Bloquear tamaño de texto en elementos específicos */
-.message h1, .message h2, .message h3, 
-.message li, .message p, .message strong {
-    font-size: 1rem !important;
-    font-weight: normal !important;
-}
-
-.message strong {
-    font-weight: bold;
-}
-
-.message.user {
-    background: #007bff;
+/* Mensajes del usuario */
+.user-message {
+    background: #4285f4;
     color: white;
     margin-left: auto;
+    border-bottom-right-radius: 4px;
 }
 
-.message.bot {
-    background: #e9ecef;
-    margin-right: auto;
+/* Mensajes de error */
+.error-message {
+    background: #fce8e6;
+    color: #d93025;
+    border-left: 3px solid #d93025;
 }
 
-.message.error {
-    background: #ffe3e3;
-    color: #dc3545;
-}
-
-.input-container {
+/* Área de entrada */
+.input-area {
     display: flex;
     gap: 10px;
-    margin-top: 20px;
 }
 
-.input-container input {
+.chat-input {
     flex: 1;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 25px;
-    font-size: 16px;
+    padding: 12px 16px;
+    border: 1px solid #dadce0;
+    border-radius: 24px;
+    font-size: 15px;
 }
 
-.input-container button {
-    padding: 12px 25px;
-    background: #28a745;
+.send-button {
+    padding: 0 24px;
+    background: #4285f4;
     color: white;
     border: none;
-    border-radius: 25px;
+    border-radius: 24px;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: background 0.2s;
 }
 
-.input-container button:hover {
-    background: #218838;
+.send-button:hover {
+    background: #3367d6;
 }
 
-.hidden {
+/* Loading indicator */
+.loading-hidden {
     display: none;
 }
 
-.loader {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
+.spinner {
+    border: 3px solid rgba(0,0,0,0.1);
+    border-top: 3px solid #4285f4;
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
     animation: spin 1s linear infinite;
-    margin: 20px auto;
+    margin: 0 auto;
 }
 
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    display: block;
+    text-align: center;
+    margin-top: 8px;
+    color: #5f6368;
+    font-size: 14px;
 }
 </style>
 {% endblock %}
