@@ -124,3 +124,42 @@ button {
 /* Unidades fluidas para textos */
 h1 { font-size: clamp(1.5rem, 4vw, 2rem); }
 p { font-size: clamp(1rem, 2.5vw, 1.1rem); }
+
+/* Estilos base del nav */
+nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.mobile-menu a {
+    padding: 12px;
+    text-decoration: none;
+    color: #333;
+    border-bottom: 1px solid #eee;
+}
+
+.mobile-menu a:last-child {
+    border-bottom: none;
+}
+
+/* Estilos para escritorio */
+@media (min-width: 769px) {
+    .nav-links {
+        display: flex !important;
+    }
+    
+    .nav-links a {
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        color: #333;
+        transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+        color: #007bff;
+    }
+}
