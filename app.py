@@ -2,7 +2,8 @@ from flask import Flask, render_template, request, session, redirect, url_for
 from flask import Flask, render_template, request, jsonify
 import google.generativeai as genai
 from flask import jsonify
-from flask import flash
+from flask import flash  # Añade esto al inicio
+#from google.generativeai import GenerativeModel
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -117,16 +118,16 @@ def chat_handler():
         # Lógica de Gemini
         chat = get_chat_session()
         response = chat.send_message(
-            f"Responde como experto financiero usando SOLO texto plano. Prohibido: "
-            f"Markdown, HTML, listas, encabezados (#), **negritas**, o símbolos especiales. "
+            f"Responde como experto financiero usando EXCLUSIVAMENTE texto plano sin formato. "
+            f"Prohibido usar: Markdown, HTML, listas con viñetas, encabezados o símbolos especiales. "
+            f"Evita cualquier formato especial, listas con viñetas o encabezados. "
             f"Pregunta: {user_message}"
         )
         
-        # Limpieza profunda
-        clean_text = response.text.replace('*', '').replace('#', '').strip()
-        clean_text = re.sub(r'\n{2,}', '\n', clean_text)  # Eliminar saltos múltiples
-
-        return jsonify({"response": clean_text, "status": "success"})
+        return jsonify({
+            "response": response.text,
+            "status": "success"
+        })
         
     except Exception as e:
         return jsonify({
