@@ -200,5 +200,73 @@ document.getElementById('userInput').addEventListener('keypress', (e) => {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* ============= AJUSTES PARA MÓVIL ============= */
+@media (max-width: 768px) {
+    .chat-container {
+        padding: 15px;
+        height: 100vh;
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .message-wrapper {
+        height: calc(100vh - 180px);
+        margin-bottom: 15px;
+        border: none;
+    }
+
+    /* Botón flotante para móviles */
+    .submit-btn {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 400px;
+        padding: 18px;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        z-index: 1000;
+    }
+
+    .input-wrapper {
+        display: none; /* Ocultamos el input original */
+    }
+
+    /* Ajuste para teclado virtual */
+    .text-input:focus {
+        margin-bottom: 80px;
+        transition: margin 0.3s;
+    }
+}
+
+/* Animación suave para el botón */
+.submit-btn {
+    transition: all 0.3s ease;
+}
+
+/* Efecto hover solo para desktop */
+@media (hover: hover) {
+    .submit-btn:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+}
+
+/* Ajuste final para pantallas pequeñas */
+@media (max-width: 480px) {
+    .submit-btn {
+        width: 95%;
+        bottom: 10px;
+        padding: 16px;
+    }
+    
+    .message {
+        max-width: 92%;
+    }
+}
+
 </style>
 {% endblock %}
