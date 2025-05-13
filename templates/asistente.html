@@ -72,22 +72,18 @@ function appendMessage(text, type) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
     
-    // Crear nodo de texto seguro
-    const textNode = document.createTextNode(text);
+    // Texto limpio y normalizado
+    const cleanText = cleanResponse(text)
+        .replace(/\n/g, '<br>'); // Convertir saltos de línea
     
-    // Contenedor protegido
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-safe-content';
-    contentDiv.appendChild(textNode);
+    messageDiv.innerHTML = `<div class="message-content">${cleanText}</div>`;
     
-    messageDiv.appendChild(contentDiv);
+    // Forzar estilos incluso si el navegador intenta cambiarlos
+    messageDiv.querySelectorAll('*').forEach(element => {
+        element.style.cssText = 'font-size: 1rem !important; line-height: 1.5 !important;';
+    });
+    
     chatBox.appendChild(messageDiv);
-    
-    // Forzar estilos después de inserción
-    setTimeout(() => {
-        messageDiv.style.cssText = 'font-size: 16px !important; line-height: 1.5 !important;';
-    }, 0);
-    
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
@@ -117,23 +113,40 @@ userInput.addEventListener('keypress', (e) => {
     background: white;
 }
 
-.message, .message * {
-    all: initial !important;
-    font-family: system-ui, sans-serif !important;
-    font-size: 16px !important;
-    line-height: 1.5 !important;
-    color: inherit !important;
-    display: block !important;
-    margin: 8px 0 !important;
-    padding: 0 !important;
+.message {
+    margin: 10px 0;
+    padding: 12px 18px;
+    border-radius: 20px;
+    max-width: 80%;
+    word-break: break-word;
+    font-size: 1rem !important;
+    line-height: 1.5;
 }
 
-/* Contenedor de mensajes */
-.message {
-    max-width: 80%;
-    padding: 12px 18px !important;
-    border-radius: 20px;
-    background: #e9ecef;
+/* Reset completo para elementos anidados */
+.message * {
+    all: revert !important; /* Anula cualquier estilo heredado */
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    font-family: system-ui, sans-serif !important;
+    color: inherit !important;
+}
+
+/* Eliminar márgenes en listas */
+.message ul, .message ol {
+    margin: 0 !important;
+    padding-left: 1.5rem !important;
+}
+
+/* Bloquear tamaño de texto en elementos específicos */
+.message h1, .message h2, .message h3, 
+.message li, .message p, .message strong {
+    font-size: 1rem !important;
+    font-weight: normal !important;
+}
+
+.message strong {
+    font-weight: bold;
 }
 
 .message.user {
