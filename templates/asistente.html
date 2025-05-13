@@ -2,165 +2,161 @@
 
 {% block content %}
 <div class="chat-container">
-    <h1 class="chat-title">🧠 Asistente Financiero IA</h1>
+    <h1 class="chat-header">🧠 Asistente Financiero IA</h1>
 
-    <div class="chat-box" id="chatBox">
+    <div class="message-wrapper" id="chatBox">
         <div class="message bot-message">
-            <div class="message-content">¡Hola! Soy tu experto en finanzas personales. ¿En qué puedo ayudarte hoy?</div>
+            <div class="text-content">¡Hola! Soy tu experto en finanzas personales. ¿En qué puedo ayudarte hoy?</div>
         </div>
     </div>
 
-    <div class="input-area">
-        <input type="text" id="userInput" class="chat-input" placeholder="Escribe tu pregunta financiera..." aria-label="Escribe tu mensaje">
-        <button class="send-button" onclick="sendMessage()">Enviar</button>
+    <div class="input-wrapper">
+        <input type="text" id="userInput" class="text-input" placeholder="Escribe tu pregunta financiera...">
+        <button class="submit-btn" onclick="sendMessage()">Enviar</button>
     </div>
 
-    <div id="loadingIndicator" class="loading-hidden">
-        <div class="spinner"></div>
-        <span class="loading-text">Procesando...</span>
+    <div id="loader" class="loader-hidden">
+        <div class="loading-spinner"></div>
+        <span class="loading-message">Procesando...</span>
     </div>
 </div>
 
 <script>
-// Elementos del DOM
-const chatBox = document.getElementById('chatBox');
-const userInput = document.getElementById('userInput');
-const loadingIndicator = document.getElementById('loadingIndicator');
-
-// Función para sanitizar texto
-const sanitizeText = (text) => {
-    return text
-        .replace(/<\/?[^>]+(>|$)/g, '')  // Eliminar HTML
-        .replace(/[*#_`~]/g, '')         // Eliminar markdown
-        .replace(/\n{2,}/g, '\n')        // Reducir saltos múltiples
-        .trim();
+// Versión ultra-segura del sanitizador
+const superSanitize = (text) => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML
+        .replace(/<\/?[a-z][^>]*>/gi, '')
+        .replace(/[#*_`\[\]]/g, '')
+        .replace(/\n{2,}/g, '\n');
 };
 
-// Función para crear mensajes
-const createMessage = (text, type) => {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}-message`;
+// Función de creación de mensajes a prueba de estilos
+const createBulletproofMessage = (content, type) => {
+    const container = document.createElement('div');
+    container.className = `message ${type}-message`;
     
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-content';
-    contentDiv.textContent = sanitizeText(text);
+    const textNode = document.createTextNode(superSanitize(content));
+    const contentBox = document.createElement('div');
+    contentBox.className = 'text-content';
     
-    messageDiv.appendChild(contentDiv);
-    return messageDiv;
+    // Aplicación directa de estilos (no usa CSS)
+    contentBox.style.cssText = `
+        font-size: 15px !important;
+        line-height: 1.4 !important;
+        font-family: Arial, sans-serif !important;
+        color: ${type === 'user' ? 'white' : '#202124'} !important;
+        padding: 12px 16px;
+        margin: 0;
+    `;
+    
+    contentBox.appendChild(textNode);
+    container.appendChild(contentBox);
+    return container;
 };
 
-// Función principal
+// Controlador de mensajes
 async function sendMessage() {
     const message = userInput.value.trim();
     if (!message) return;
 
-    // Mostrar mensaje del usuario
-    chatBox.appendChild(createMessage(message, 'user'));
+    const chatBox = document.getElementById('chatBox');
+    chatBox.appendChild(createBulletproofMessage(message, 'user'));
     userInput.value = '';
-    loadingIndicator.classList.remove('loading-hidden');
-
+    
+    document.getElementById('loader').classList.remove('loader-hidden');
+    
     try {
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({message: message})
         });
-
-        if (!response.ok) throw new Error('Error en la respuesta');
         
         const data = await response.json();
-        chatBox.appendChild(createMessage(data.response, 'bot'));
-
+        chatBox.appendChild(createBulletproofMessage(data.response, 'bot'));
+        
     } catch (error) {
-        chatBox.appendChild(createMessage(`Error: ${error.message}`, 'error'));
+        chatBox.appendChild(createBulletproofMessage(
+            `Error: ${error.message || 'No se pudo procesar'}`, 'error'
+        ));
     } finally {
-        loadingIndicator.classList.add('loading-hidden');
+        document.getElementById('loader').classList.add('loader-hidden');
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 }
 
-// Evento para enviar con Enter
-userInput.addEventListener('keypress', (e) => {
+// Evento Enter
+document.getElementById('userInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
 </script>
 
 <style>
-/* Reset completo */
-.chat-container * {
+/* Reset nuclear */
+.chat-container, .chat-container * {
+    all: unset;
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: block;
 }
 
-/* Contenedor principal */
+/* Estilos base */
 .chat-container {
     max-width: 800px;
     margin: 20px auto;
     padding: 20px;
     background: #f8f9fa;
     border-radius: 10px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    font-family: Arial, sans-serif;
 }
 
-/* Área de chat */
-.chat-box {
+.chat-header {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #202124;
+    font-weight: normal;
+}
+
+.message-wrapper {
     height: 500px;
     padding: 15px;
-    margin-bottom: 20px;
-    overflow-y: auto;
     background: white;
-    border-radius: 8px;
     border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow-y: auto;
+    margin-bottom: 20px;
 }
 
-/* Mensajes base */
+/* Contenedores de mensaje */
 .message {
     max-width: 85%;
     margin: 10px 0;
     border-radius: 18px;
-    font-size: 15px;
-    line-height: 1.45;
-    position: relative;
 }
 
-/* Contenido del mensaje */
-.message-content {
-    padding: 12px 16px;
-    word-break: break-word;
-    white-space: pre-wrap;
-}
-
-/* Mensajes del bot */
 .bot-message {
     background: #f1f3f4;
     margin-right: auto;
-    border-bottom-left-radius: 4px;
 }
 
-/* Mensajes del usuario */
 .user-message {
     background: #4285f4;
-    color: white;
     margin-left: auto;
-    border-bottom-right-radius: 4px;
 }
 
-/* Mensajes de error */
 .error-message {
     background: #fce8e6;
-    color: #d93025;
     border-left: 3px solid #d93025;
 }
 
 /* Área de entrada */
-.input-area {
+.input-wrapper {
     display: flex;
     gap: 10px;
 }
 
-.chat-input {
+.text-input {
     flex: 1;
     padding: 12px 16px;
     border: 1px solid #dadce0;
@@ -168,26 +164,21 @@ userInput.addEventListener('keypress', (e) => {
     font-size: 15px;
 }
 
-.send-button {
-    padding: 0 24px;
+.submit-btn {
+    padding: 12px 24px;
     background: #4285f4;
     color: white;
     border: none;
     border-radius: 24px;
     cursor: pointer;
-    transition: background 0.2s;
 }
 
-.send-button:hover {
-    background: #3367d6;
-}
-
-/* Loading indicator */
-.loading-hidden {
+/* Loader */
+.loader-hidden {
     display: none;
 }
 
-.spinner {
+.loading-spinner {
     border: 3px solid rgba(0,0,0,0.1);
     border-top: 3px solid #4285f4;
     border-radius: 50%;
@@ -197,17 +188,17 @@ userInput.addEventListener('keypress', (e) => {
     margin: 0 auto;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.loading-text {
+.loading-message {
     display: block;
     text-align: center;
     margin-top: 8px;
     color: #5f6368;
     font-size: 14px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 </style>
 {% endblock %}
