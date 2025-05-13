@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asesor Financiero IA</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
         </head>
         <body>
             <nav>
+                <button class="nav-toggle" aria-label="Menú">☰</button>
                     <a href="{{ url_for('registro') }}">Registro</a>
                             <a href="{{ url_for('asistente') }}">Asistente IA</a>
                                     <a href="{{ url_for('analizador') }}">Analizador</a>
