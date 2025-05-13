@@ -1,5 +1,6 @@
 body {
     font-family: Arial, sans-serif;
+    font-size: 16px;
     margin: 0;
     padding: 20px;
     background-color: #f5f5f5;
@@ -86,4 +87,84 @@ button {
     background-color: #4CAF50;
     border-radius: 5px;
     margin-top: 5px;
+}
+
+/* Media Queries (Adapta estilos por dispositivo) */
+@media (max-width: 768px) {
+    /* Navegación móvil */
+    .nav-links {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .nav-links.active {
+        display: flex;
+    }
+
+    /* Ajustes de formulario móvil */
+    .form-group {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Chat en móviles */
+    .message-bubble {
+        max-width: 90% !important;
+        font-size: 14px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    /* Estilos para tabletas */
+    .content-container {
+        padding: 1.5rem;
+    }
+}
+
+/* Unidades fluidas para textos */
+h1 { font-size: clamp(1.5rem, 4vw, 2rem); }
+p { font-size: clamp(1rem, 2.5vw, 1.1rem); }
+
+/* Estilos base del nav */
+nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: #2d3748; /* Fondo oscuro de la barra principal */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Menú desplegable móvil */
+.mobile-menu {
+    background: #ffffff; /* Fondo blanco para el menú */
+    border: 1px solid #e2e8f0; /* Borde claro */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Sombra suave */
+}
+
+.mobile-menu a {
+    padding: 12px;
+    text-decoration: none;
+    color: #2d3748; /* Texto oscuro */
+    border-bottom: 1px solid #edf2f7; /* Borde claro entre opciones */
+}
+
+.mobile-menu a:hover {
+    background: #f7fafc; /* Fondo gris claro al hover */
+}
+
+/* Botón del menú móvil */
+.nav-toggle {
+    color: white; /* Color del ícono ☰ en la barra oscura */
+}
+
+/* Versión escritorio (mantiene colores oscuros) */
+@media (min-width: 769px) {
+    .nav-links a {
+        color: #cbd5e0; /* Texto claro semi-transparente */
+    }
+    
+    .nav-links a:hover {
+        color: #ffffff; /* Blanco al hover */
+    }
 }

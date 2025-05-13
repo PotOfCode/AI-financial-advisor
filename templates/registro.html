@@ -2,9 +2,9 @@
 
 {% block content %}
 <div class="container">
-    <!-- Sección de Tasas de Cambio -->
+    <!-- Sección de Tasas de Cambio Responsiva -->
     <div class="tasa-container">
-        <h2>💱 Tasas de Cambio Actuales</h2>
+        <h2 class="section-title">💱 Tasas de Cambio Actuales</h2>
         <div class="tasa-box">
             <div class="tasa-item">
                 <span>Dólar BCV:</span>
@@ -18,46 +18,47 @@
         </div>
     </div>
 
-    <!-- Formulario de Registro -->
-    <h1>📝 Registro Financiero</h1>
-    <form method="POST" class="finance-form">
-        <div class="form-columns">
-            <!-- Columna 1 -->
-            <div class="form-column">
-                <div class="form-group">
-                    <label>Ingresos Mensuales:</label>
-                    <input type="number" step="0.01" name="ingresos" value="{{ datos.ingresos }}" required>
+    <!-- Formulario Responsivo -->
+    <div class="responsive-form-container">
+        <h1 class="form-main-title">📝 Registro Financiero</h1>
+        <form method="POST" class="finance-form">
+            <div class="form-columns">
+                <!-- Columna 1 -->
+                <div class="form-column mobile-column">
+                    <div class="form-group">
+                        <label>Ingresos Mensuales:</label>
+                        <input type="number" step="0.01" name="ingresos" value="{{ datos.ingresos }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Deudas Totales (Bs):</label>
+                        <input type="number" step="0.01" name="deudas" value="{{ datos.deudas }}" required>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label>Deudas Totales (Bs):</label>
-                    <input type="number" step="0.01" name="deudas" value="{{ datos.deudas }}" required>
+
+                <!-- Columna 2 -->
+                <div class="form-column mobile-column">
+                    <h3 class="gastos-title">🏷️ Gastos Mensuales</h3>
+                    {% for categoria, valor in datos.gastos.items() %}
+                    <div class="form-group">
+                        <label>{{ categoria }}:</label>
+                        <input type="number" step="0.01" name="{{ categoria.lower() }}" value="{{ valor }}" required>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="form-group">
+                        <label>Ahorros Actuales:</label>
+                        <input type="number" step="0.01" name="ahorros" value="{{ datos.ahorros }}" required>
+                    </div>
                 </div>
             </div>
 
-            <!-- Columna 2 -->
-            <div class="form-column">
-                <h3>🏷️ Gastos Mensuales</h3>
-                {% for categoria, valor in datos.gastos.items() %}
-                <div class="form-group">
-                    <label>{{ categoria }}:</label>
-                    <input type="number" step="0.01" name="{{ categoria.lower() }}" value="{{ valor }}" required>
-                </div>
-                {% endfor %}
-                
-                <div class="form-group">
-                    <label>Ahorros Actuales:</label>
-                    <input type="number" step="0.01" name="ahorros" value="{{ datos.ahorros }}" required>
-                </div>
-            </div>
-        </div>
-
-        <button type="submit" class="submit-btn">💾 Actualizar Datos</button>
-    </form>
+            <button type="submit" class="submit-btn responsive-button">💾 Actualizar Datos</button>
+        </form>
+    </div>
 </div>
 
 <script>
-// Obtener y mostrar tasas de cambio
 document.addEventListener('DOMContentLoaded', () => {
     fetch('/api/tasas')
     .then(response => response.json())
@@ -84,19 +85,26 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <style>
-/* Estilos para tasas de cambio */
+/* ============= ESTILOS BASE ============= */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Tasas de Cambio */
 .tasa-container {
     background: #ffffff;
     border-radius: 10px;
     box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-    padding: 20px;
+    padding: 25px;
     margin-bottom: 30px;
 }
 
 .tasa-box {
     display: grid;
     gap: 15px;
-    margin-top: 15px;
+    margin-top: 20px;
 }
 
 .tasa-item {
@@ -116,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .tasa-item strong {
     color: #2c3e50;
-    font-size: 1.1rem;
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
     font-weight: 600;
 }
 
@@ -128,60 +136,177 @@ document.addEventListener('DOMContentLoaded', () => {
     font-size: 0.85rem;
 }
 
-/* Estilos existentes actualizados */
-.container {
-    max-width: 1000px;
-    margin: 20px auto;
-    padding: 20px;
+/* Formulario */
+.responsive-form-container {
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    padding: 25px;
+}
+
+.form-main-title {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: clamp(1.5rem, 3vw, 2rem);
 }
 
 .form-columns {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 30px;
-    margin-top: 20px;
 }
 
 .form-column {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 20px;
+}
+
+.gastos-title {
+    color: #4a5568;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 8px;
 }
 
 .form-group label {
     color: #4a5568;
     font-weight: 500;
+    font-size: 0.95rem;
 }
 
 .form-group input {
-    padding: 10px;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 1rem;
-}
-
-.submit-btn {
-    display: block;
     width: 100%;
     padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #48bb78;
+    outline: none;
+}
+
+.responsive-button {
+    display: block;
+    width: 100%;
+    padding: 15px;
     background: #48bb78;
     color: white;
     border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-    margin-top: 20px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    margin-top: 30px;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: all 0.3s;
 }
 
-.submit-btn:hover {
+.responsive-button:hover {
     background: #38a169;
+    transform: translateY(-1px);
 }
+
+/* ============= DISEÑO RESPONSIVO ============= */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    .tasa-container {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-main-title {
+        margin-bottom: 20px;
+    }
+
+    .form-columns {
+        gap: 20px;
+    }
+
+    .mobile-column {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .tasa-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 12px;
+    }
+
+    #actualizacion {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 10px;
+    }
+
+    .tasa-container {
+        padding: 15px;
+    }
+
+    .responsive-form-container {
+        padding: 15px;
+    }
+
+    .form-group input {
+        font-size: 16px;
+        padding: 14px;
+    }
+
+    .responsive-button {
+        font-size: 1rem;
+        padding: 14px;
+        margin-top: 20px;
+    }
+
+    .gastos-title {
+        font-size: 1.1rem;
+    }
+}
+
+@media (hover: none) {
+    .responsive-button:hover {
+        transform: none;
+        background: #48bb78;
+    }
+}
+
+@media (max-width: 480px) {
+    .responsive-button {
+        position: fixed;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 95%;
+        max-width: 400px;
+        border-radius: 25px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        padding: 16px;
+        margin: 0;
+        z-index: 1000;
+    }
+
+    .responsive-form-container {
+        padding-bottom: 80px; /* Espacio para el botón fijo */
+    }
+}
+
 </style>
 {% endblock %}

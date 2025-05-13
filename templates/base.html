@@ -1,17 +1,100 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asesor Financiero IA</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-        </head>
-        <body>
-            <nav>
-                    <a href="{{ url_for('registro') }}">Registro</a>
-                            <a href="{{ url_for('asistente') }}">Asistente IA</a>
-                                    <a href="{{ url_for('analizador') }}">Analizador</a>
-                                        </nav>
-                                            <div class="container">
-                                                    {% block content %}{% endblock %}
-                                                        </div>
-                                                        </body>
-                                                        </html>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Estilos para el menú móvil */
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            flex-direction: column;
+            padding: 10px;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .nav-toggle {
+                display: block;
+            }
+
+            .mobile-menu.active {
+                display: flex;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <button class="nav-toggle" aria-label="Menú">☰</button>
+        <div class="nav-links">
+            <a href="{{ url_for('registro') }}">Registro</a>
+            <a href="{{ url_for('asistente') }}">Asistente IA</a>
+            <a href="{{ url_for('analizador') }}">Analizador</a>
+        </div>
+        <div class="mobile-menu">
+            <a href="{{ url_for('registro') }}">Registro</a>
+            <a href="{{ url_for('asistente') }}">Asistente IA</a>
+            <a href="{{ url_for('analizador') }}">Analizador</a>
+        </div>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        // Control del menú móvil
+        document.querySelector('.nav-toggle').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.querySelector('.mobile-menu').classList.toggle('active');
+        });
+
+        // Cerrar menú al hacer click fuera
+        document.addEventListener('click', (e) => {
+            const menu = document.querySelector('.mobile-menu');
+            if (menu.classList.contains('active') && 
+                !e.target.closest('.mobile-menu') && 
+                !e.target.closest('.nav-toggle')) {
+                menu.classList.remove('active');
+            }
+        });
+
+        // Cerrar menú al cambiar de tamaño de pantalla
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                document.querySelector('.mobile-menu').classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

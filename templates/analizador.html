@@ -6,7 +6,9 @@
     
     {% if plot_url %}
     <div class="grafico-container">
-        <img src="data:image/png;base64,{{ plot_url }}" alt="Distribución de gastos">
+        <img src="data:image/png;base64,{{ plot_url }}" 
+             class="responsive-img" 
+             alt="Gráfico de gastos">
     </div>
 {% else %}
     <div class="alert alert-info">
@@ -32,4 +34,16 @@
         </div>
     </div>
 </div>
+
+<style>
+
+.responsive-img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+    
+</style>
+
 {% endblock %}
