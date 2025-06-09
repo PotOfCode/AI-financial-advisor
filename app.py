@@ -16,28 +16,51 @@ import os
 from flask_cors import CORS
 import requests
 from datetime import datetime, timedelta
+from pyDolarVenezuela.pages import BCV
+from pyDolarVenezuela import Monitor
+import pytz
 
 
 app = Flask(__name__)
 # Añade esta ruta antes de las demás
+def obtener_tasas_bcv():
+    try:
+        # Configurar zona horaria
+        zone = pytz.timezone('America/Caracas')
+        
+        # Obtener datos del dólar BCV
+        monitor_dolar = Monitor(BCV, 'USD')
+        dolar_data = monitor_dolar.get_value_monitors("usd")
+        
+        # Obtener datos del euro BCV
+        monitor_euro = Monitor(BCV, 'EUR')
+        euro_data = monitor_euro.get_value_monitors("eur")
+        
+        # Formatear última actualización
+        last_update_dt = dolar_data.last_update.astimezone(zone)
+        formatted_last_update = last_update_dt.strftime('%d/%m/%Y, %I:%M %p')
+        
+        return {
+            'bcv_dolar': dolar_data.price,
+            'bcv_euro': euro_data.price,
+            'last_update': formatted_last_update,
+            'error': False
+        }
+    except Exception as e:
+        print(f"Error obteniendo tasas BCV: {e}")
+        # Valores por defecto en caso de error
+        return {
+            'bcv_dolar': 92.83,
+            'bcv_euro': 100.64,
+            'last_update': datetime.now().strftime('%d/%m/%Y, %I:%M %p'),
+            'error': True
+        }
+
+# Ruta API para obtener tasas (actualizada)
 @app.route('/api/tasas')
 def obtener_tasas():
-    try:
-        # API no oficial del BCV (ejemplo)
-        response = requests.get('https://monitordolarvzla.com/api/v1/exchange_rates/latest')
-        data = response.json()
-        
-        return jsonify({
-    'bcv': data['data']['USD']['exchange_rates']['bcv'],  # ✅ Usa ":" y comillas en las claves
-    'promedio': data['data']['USD']['exchange_rates']['promedio']  # ✅
-})
-        
-    except Exception as e:
-        return jsonify({
-            'bcv': 92.83,  # Valor por defecto
-            'promedio': 103.64,
-            'error': True
-        })
+    tasas = obtener_tasas_bcv()
+    return jsonify(tasas)
 
 #app.secret_key = os.environ.get('SECRET_KEY')
 app.secret_key = 'IL4LbtIP4r'
@@ -66,6 +89,8 @@ def inicializar_datos():
             'deudas': 0,
             'ahorros': 0
         }
+    # Actualizar tasas en cada solicitud
+    session['tasas'] = obtener_tasas_bcv()
 
 @app.route('/')
 def index():
@@ -110,7 +135,20 @@ def chat_handler():
     try:
         data = request.get_json()
         user_message = data.get('message', '')
-        
+
+         # Manejar solicitudes de tasas de cambio
+        if any(keyword in user_message for keyword in ['dólar', 'dolar', 'euro', 'tasa', 'bcv', 'bolívares']):
+            tasas = session.get('tasas', obtener_tasas_bcv())
+            response_text = (
+                f"💰 Tasas de cambio oficiales BCV (actualizadas el {tasas['last_update']}):\n"
+                f"- Dólar: {tasas['bcv_dolar']} Bs/USD\n"
+                f"- Euro: {tasas['bcv_euro']} Bs/EUR"
+            )
+            return jsonify({
+                "response": response_text,
+                "status": "success"
+            })
+            
         # Validar entrada
         if not user_message:
             return jsonify({"status": "error", "message": "Mensaje vacío"}), 400
