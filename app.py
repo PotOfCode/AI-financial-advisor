@@ -50,7 +50,7 @@ def obtener_tasas_bcv():
         print(f"Error obteniendo tasas BCV: {e}")
         # Valores por defecto en caso de error
         return {
-            'bcv_dolar': 92.83,
+            'bcv_dolar': 'bcv_dolar',
             'bcv_euro': 100.64,
             'last_update': datetime.now().strftime('%d/%m/%Y, %I:%M %p'),
             'error': True
