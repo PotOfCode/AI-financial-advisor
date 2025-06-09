@@ -8,13 +8,13 @@
         <div class="tasa-box">
             <div class="tasa-item">
                 <span>Dólar BCV:</span>
-                <strong id="tasaBcv">Cargando...</strong>
+                <div class="rate-value" id="dolar-rate">Bs. {{ tasas.bcv_dolar|default('Cargando...', true) }}</div>
             </div>
             <div class="tasa-item">
                 <span>Dólar Euro:</span>
-                <strong id="tasaPromedio">Cargando...</strong>
+                <div class="rate-value" id="euro-rate">Bs. {{ tasas.bcv_euro|default('Cargando...', true) }}</div>
             </div>
-            <small id="actualizacion">Última actualización: -</small>
+            <small id="last-update">Última actualización: {{ tasas.last_update }}</small>
         </div>
     </div>
 
