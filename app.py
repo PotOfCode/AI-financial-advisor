@@ -16,7 +16,7 @@ import os
 from flask_cors import CORS
 import requests
 from datetime import datetime, timedelta
-from pyDolarVenezuela.pages import BCV
+from pyDolarVenezuela.pages import AlCambio, BCV, CriptoDolar, DolarToday, ExchangeMonitor, EnParaleloVzla, Italcambio
 from pyDolarVenezuela import Monitor
 import pytz
 
@@ -30,11 +30,11 @@ def obtener_tasas_bcv():
         
         # Obtener datos del dólar BCV
         monitor_dolar = Monitor(BCV, 'USD')
-        dolar_data = monitor_dolar.get_value_monitors("usd")
+        dolar_data = monitor_dolar.get_value_monitors("BCV")
         
         # Obtener datos del euro BCV
         monitor_euro = Monitor(BCV, 'EUR')
-        euro_data = monitor_euro.get_value_monitors("eur")
+        euro_data = monitor_euro.get_value_monitors("BCV")
         
         # Formatear última actualización
         last_update_dt = dolar_data.last_update.astimezone(zone)
@@ -50,7 +50,7 @@ def obtener_tasas_bcv():
         print(f"Error obteniendo tasas BCV: {e}")
         # Valores por defecto en caso de error
         return {
-            'bcv_dolar': 'bcv_dolar',
+            'bcv_dolar': 92.63,
             'bcv_euro': 100.64,
             'last_update': datetime.now().strftime('%d/%m/%Y, %I:%M %p'),
             'error': True
