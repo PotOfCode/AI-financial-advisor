@@ -4,18 +4,18 @@
 <div class="container">
     <!-- Sección de Tasas de Cambio Responsiva -->
     <div class="tasa-container">
-        <h2 class="section-title">💱 Tasas de Cambio Actuales</h2>
-        <div class="tasa-box">
-            <div class="tasa-item">
-                <span>Dólar BCV:</span>
-                <div class="rate-value" id="dolar-rate">Bs. {{ tasas.bcv_dolar|default('Cargando...', true) }}</div>
-            </div>
-            <div class="tasa-item">
-                <span>Dólar Euro:</span>
-                <div class="rate-value" id="euro-rate">Bs. {{ tasas.bcv_euro|default('Cargando...', true) }}</div>
-            </div>
-            <small id="last-update">Última actualización: {{ tasas.last_update }}</small>
+    <h2 class="section-title">💱 Tasas de Cambio Actuales</h2>
+    <div class="tasa-box">
+        <div class="tasa-item">
+            <span>Dólar BCV:</span>
+            <strong id="tasaDolar">Cargando...</strong>
         </div>
+        <div class="tasa-item">
+            <span>Euro BCV:</span>
+            <strong id="tasaEuro">Cargando...</strong>
+        </div>
+        <small id="actualizacion">Última actualización: -</small>
+    </div>
     </div>
 
     <!-- Formulario Responsivo -->
@@ -68,9 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
             maximumFractionDigits: 2
         });
 
-        document.getElementById('tasaBcv').textContent = `Bs. ${formatter.format(data.bcv)}`;
-        document.getElementById('tasaPromedio').textContent = `Bs. ${formatter.format(data.promedio)}`;
-        document.getElementById('actualizacion').textContent = `Actualizado: ${data.fecha}`;
+        // Actualizar los elementos con los nuevos datos
+        document.getElementById('tasaDolar').textContent = `Bs. ${formatter.format(data.bcv_dolar)}`;
+        document.getElementById('tasaEuro').textContent = `Bs. ${formatter.format(data.bcv_euro)}`;
+        document.getElementById('actualizacion').textContent = `Última actualización: ${data.last_update}`;
         
         if(data.error) {
             document.getElementById('actualizacion').textContent += ' (Datos locales)';
@@ -78,8 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .catch(error => {
         console.error('Error:', error);
-        document.getElementById('tasaBcv').textContent = 'No disponible';
-        document.getElementById('tasaPromedio').textContent = 'No disponible';
+        document.getElementById('tasaDolar').textContent = 'No disponible';
+        document.getElementById('tasaEuro').textContent = 'No disponible';
+        document.getElementById('actualizacion').textContent = 'Error al cargar datos';
     });
 });
 </script>
