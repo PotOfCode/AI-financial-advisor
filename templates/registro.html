@@ -4,18 +4,18 @@
 <div class="container">
     <!-- Sección de Tasas de Cambio Responsiva -->
     <div class="tasa-container">
-    <h2 class="section-title">💱 Tasas de Cambio Actuales</h2>
-    <div class="tasa-box">
-        <div class="tasa-item">
-            <span>Dólar BCV:</span>
-            <strong id="tasaDolar">Cargando...</strong>
+        <h2 class="section-title">💱 Tasas de Cambio Actuales</h2>
+        <div class="tasa-box">
+            <div class="tasa-item">
+                <span>Dólar BCV:</span>
+                <strong id="tasaDolar">Cargando...</strong>
+            </div>
+            <div class="tasa-item">
+                <span>Euro BCV:</span>
+                <strong id="tasaEuro">Cargando...</strong>
+            </div>
+            <small id="actualizacion">Última actualización: -</small>
         </div>
-        <div class="tasa-item">
-            <span>Euro BCV:</span>
-            <strong id="tasaEuro">Cargando...</strong>
-        </div>
-        <small id="actualizacion">Última actualización: -</small>
-    </div>
     </div>
 
     <!-- Formulario Responsivo -->
@@ -29,7 +29,7 @@
                         <label>Ingresos Mensuales:</label>
                         <input type="number" step="0.01" name="ingresos" value="{{ datos.ingresos }}" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Deudas Totales (Bs):</label>
                         <input type="number" step="0.01" name="deudas" value="{{ datos.deudas }}" required>
@@ -45,7 +45,7 @@
                         <input type="number" step="0.01" name="{{ categoria.lower() }}" value="{{ valor }}" required>
                     </div>
                     {% endfor %}
-                    
+
                     <div class="form-group">
                         <label>Ahorros Actuales:</label>
                         <input type="number" step="0.01" name="ahorros" value="{{ datos.ahorros }}" required>
@@ -61,27 +61,50 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     fetch('/api/tasas')
-    .then(response => response.json())
+    .then(response => {
+        // Check if the request was successful
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         const formatter = new Intl.NumberFormat('es-VE', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
 
-        // Actualizar los elementos con los nuevos datos
-        document.getElementById('tasaDolar').textContent = `Bs. ${formatter.format(data.bcv_dolar)}`;
-        document.getElementById('tasaEuro').textContent = `Bs. ${formatter.format(data.bcv_euro)}`;
-        document.getElementById('actualizacion').textContent = `Última actualización: ${data.last_update}`;
-        
+        // Update the elements with the new data
+        // Safely format numbers, fallback to raw data if not a valid number (e.g., "N/A")
+        const dolarValue = parseFloat(data.bcv_dolar);
+        if (!isNaN(dolarValue)) {
+             document.getElementById('tasaDolar').textContent = `Bs. ${formatter.format(dolarValue)}`;
+        } else {
+             document.getElementById('tasaDolar').textContent = data.bcv_dolar || 'No disponible'; // Use raw value or generic fallback
+        }
+
+        const euroValue = parseFloat(data.bcv_euro);
+        if (!isNaN(euroValue)) {
+             document.getElementById('tasaEuro').textContent = `Bs. ${formatter.format(euroValue)}`;
+        } else {
+             document.getElementById('tasaEuro').textContent = data.bcv_euro || 'No disponible'; // Use raw value or generic fallback
+        }
+
+        document.getElementById('actualizacion').textContent = `Última actualización: ${data.last_update || '-'}`; // Use fallback '-'
+
         if(data.error) {
             document.getElementById('actualizacion').textContent += ' (Datos locales)';
         }
+
+        console.log("Tasas actualizadas:", data); // Log the successful update data
+
     })
     .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('tasaDolar').textContent = 'No disponible';
-        document.getElementById('tasaEuro').textContent = 'No disponible';
-        document.getElementById('actualizacion').textContent = 'Error al cargar datos';
+        console.error('Error al cargar tasas:', error); // Log the actual error
+        // Update UI to indicate failure
+        document.getElementById('tasaDolar').textContent = 'Error';
+        document.getElementById('tasaEuro').textContent = 'Error';
+        document.getElementById('actualizacion').textContent = `Error al cargar (${error.message || error})`;
     });
 });
 </script>
