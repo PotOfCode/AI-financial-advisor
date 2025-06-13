@@ -4,17 +4,13 @@
 <div class="container">
     <!-- Sección de Tasas de Cambio Responsiva -->
     <div class="tasa-container">
-        <h2 class="section-title">💱 Tasas de Cambio Actuales</h2>
+        <h2 class="section-title">💱 Tasa de Cambio Actual</h2> {# Título ajustado #}
         <div class="tasa-box">
             <div class="tasa-item">
-                <span>Dólar BCV:</span>
+                <span>Dólar BCV:</span> {# Solo queda BCV #}
                 <strong id="tasaBcv">Cargando...</strong>
             </div>
-            <div class="tasa-item">
-                <span>Dólar Promedio:</span>
-                <strong id="tasaPromedio">Cargando...</strong>
-            </div>
-            {# Cambiamos el texto inicial a "Cargando..." #}
+            {# Eliminado: Bloque para "Dólar Promedio" #}
             <small id="actualizacion">Cargando tasas...</small>
         </div>
     </div>
@@ -40,29 +36,29 @@
                 <!-- Columna 1 -->
                 <div class="form-column mobile-column">
                     <div class="form-group">
-                        <label for="ingresos">Ingresos Mensuales (Bs):</label> {# Añadir for="" #}
-                        <input type="number" step="0.01" name="ingresos" id="ingresos" value="{{ '%.2f'|format(datos.ingresos|float) if datos.ingresos is not none else '0.00' }}" required> {# Usar float filter #}
+                        <label for="ingresos">Ingresos Mensuales (Bs):</label>
+                        <input type="number" step="0.01" name="ingresos" id="ingresos" value="{{ '%.2f'|format(datos.ingresos|float) if datos.ingresos is not none else '0.00' }}" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="deudas">Deudas Totales (Bs):</label> {# Añadir for="" #}
-                        <input type="number" step="0.01" name="deudas" id="deudas" value="{{ '%.2f'|format(datos.deudas|float) if datos.deudas is not none else '0.00' }}" required> {# Usar float filter #}
+                        <label for="deudas">Deudas Totales (Bs):</label>
+                        <input type="number" step="0.01" name="deudas" id="deudas" value="{{ '%.2f'|format(datos.deudas|float) if datos.deudas is not none else '0.00' }}" required>
                     </div>
                 </div>
 
                 <!-- Columna 2 -->
                 <div class="form-column mobile-column">
-                    <h3 class="gastos-title">🏷️ Gastos Mensuales (Bs)</h3> {# Especificar unidad #}
+                    <h3 class="gastos-title">🏷️ Gastos Mensuales (Bs)</h3>
                     {% for categoria, valor in datos.gastos.items() %}
                     <div class="form-group">
-                        <label for="{{ categoria.lower() }}">{{ categoria }}:</label> {# Añadir for="" #}
-                        <input type="number" step="0.01" name="{{ categoria.lower() }}" id="{{ categoria.lower() }}" value="{{ '%.2f'|format(valor|float) if valor is not none else '0.00' }}" required> {# Usar float filter #}
+                        <label for="{{ categoria.lower() }}">{{ categoria }}:</label>
+                        <input type="number" step="0.01" name="{{ categoria.lower() }}" id="{{ categoria.lower() }}" value="{{ '%.2f'|format(valor|float) if valor is not none else '0.00' }}" required>
                     </div>
                     {% endfor %}
 
                     <div class="form-group">
-                        <label for="ahorros">Ahorros Actuales (Bs):</label> {# Añadir for="" #}
-                        <input type="number" step="0.01" name="ahorros" id="ahorros" value="{{ '%.2f'|format(datos.ahorros|float) if datos.ahorros is not none else '0.00' }}" required> {# Usar float filter #}
+                        <label for="ahorros">Ahorros Actuales (Bs):</label>
+                        <input type="number" step="0.01" name="ahorros" id="ahorros" value="{{ '%.2f'|format(datos.ahorros|float) if datos.ahorros is not none else '0.00' }}" required>
                     </div>
                 </div>
             </div>
@@ -76,30 +72,28 @@
 document.addEventListener('DOMContentLoaded', () => {
     fetch('/api/tasas')
     .then(response => {
-        // Verificar si la respuesta HTTP fue exitosa
         if (!response.ok) {
-             // Puedes lanzar un error que será capturado por el .catch()
              throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
         }
         return response.json();
     })
     .then(data => {
-        // Intl.NumberFormat es ideal para formato de moneda local
-        const formatter = new Intl.NumberFormat('es-VE', { // Usar 'es-VE' para Venezuela
+        const formatter = new Intl.NumberFormat('es-VE', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
 
-        // Actualizar los elementos HTML con los datos recibidos
+        // Solo actualizamos la tasa BCV
         document.getElementById('tasaBcv').textContent = `Bs. ${formatter.format(data.bcv)}`;
-        document.getElementById('tasaPromedio').textContent = `Bs. ${formatter.format(data.promedio)}`;
 
-        // Construir el texto de actualización usando la fecha del backend
+        // Construir el texto de actualización
         let updateText = `Última actualización: ${data.fecha}`;
 
         // Añadir el mensaje de error si los datos son por defecto
         if(data.error) {
             updateText += ' (No se pudieron obtener las tasas actuales)';
+            // Opcional: mostrar el mensaje de error del backend si data.mensaje existe
+            // if (data.mensaje) { updateText += ` (${data.mensaje})`; }
         }
         document.getElementById('actualizacion').textContent = updateText;
 
@@ -108,8 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Error al cargar las tasas:', error);
         // Mostrar indicadores de error en la interfaz
         document.getElementById('tasaBcv').textContent = 'Error';
-        document.getElementById('tasaPromedio').textContent = 'Error';
-        // Mostrar un mensaje de error más claro en el campo de actualización
+        // Eliminado: Actualización de tasaPromedio en caso de error
         document.getElementById('actualizacion').textContent = 'No se pudieron cargar las tasas.';
     });
 });
@@ -161,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
 .tasa-box {
     display: grid;
     /* grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); <-- Puedes usar grid aquí también si quieres */
-    gap: 15px;
+    gap: 15px; /* Este gap ahora solo afecta si hay más de un elemento, como la fecha */
     margin-top: 20px;
 }
 
@@ -173,6 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
     background: #f8f9fa;
     border-radius: 8px;
     border: 1px solid #e9ecef;
+    /* Con un solo item, puede que quieras centrarlo o darle ancho total */
+    width: 100%; /* Hace que ocupe todo el ancho disponible en su columna/celda */
 }
 
 .tasa-item span {
@@ -192,6 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
     margin-top: 10px;
     color: #7f8c8d;
     font-size: 0.85rem;
+    width: 100%; /* Asegura que ocupe todo el ancho */
+    box-sizing: border-box; /* Incluye padding y borde en el ancho */
+    padding-right: 15px; /* Añade padding derecho para alineación */
 }
 
 /* Formulario */
@@ -307,6 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     #actualizacion {
         text-align: center;
+        padding-right: 0; /* Elimina padding derecho en móvil */
     }
 }
 
