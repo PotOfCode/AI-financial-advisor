@@ -6,8 +6,8 @@
 
     {% if plot_url %}
     <div class="grafico-container">
-        <img src="data:image/png;base64,{{ plot_url }}"
-             class="responsive-img"
+        <img src="data:image/png;base64,{{ plot_url }}" 
+             class="responsive-img" 
              alt="Gráfico de gastos">
     </div>
 {% else %}
@@ -19,21 +19,18 @@
     <div class="presupuesto-section">
         <h3>Presupuesto Recomendado (50/30/20)</h3>
         <strong>¿Qué es el Ahorro 50/30/20?</strong>
-        <br>Es un método para gestionar el dinero, dividiendo los ingresos en tres categorías: 50% para necesidades, 30% para deseos y 20% para ahorro o pago de deudas. Este enfoque ayuda a mantener un equilibrio financiero y a alcanzar metas a largo plazo.
+        <br>Es un método para gestionar el dinero, dividiendo los ingresos en tres categorías: 50% para necesidades, 30% para deseos y 20% para ahorro o pago de deudas. Este enfoque ayuda a mantener un equilibrio financiero y a alcanzar metas a largo plazo. 
         <div class="budget-item">
             <br><span>Necesidades (50%):</span>
-            {# CAMBIO SOLICITADO: De $ a Bs. #}
-            <strong>Bs. {{ "%.2f"|format(presupuesto.necesidades) }}</strong>
+            <strong>${{ "%.2f"|format(presupuesto.necesidades) }}</strong>
         </div>
         <div class="budget-item">
             <span>Deseos (30%):</span>
-             {# CAMBIO SOLICITADO: De $ a Bs. #}
-            <strong>Bs. {{ "%.2f"|format(presupuesto.deseos) }}</strong>
+            <strong>${{ "%.2f"|format(presupuesto.deseos) }}</strong>
         </div>
         <div class="budget-item">
             <span>Ahorro (20%):</span>
-             {# CAMBIO SOLICITADO: De $ a Bs. #}
-            <strong>Bs. {{ "%.2f"|format(presupuesto.ahorro) }}</strong>
+            <strong>${{ "%.2f"|format(presupuesto.ahorro) }}</strong>
         </div>
     </div>
 </div>
@@ -45,49 +42,6 @@
     height: auto;
     display: block;
     margin: 0 auto;
-}
-
-/* Estilos del presupuesto para consistencia visual */
-/* Estos estilos ya estaban en el código que proporcionaste */
-.presupuesto-section {
-    margin-top: 30px;
-    background: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-    padding: 25px;
-}
-
-.presupuesto-section h3 {
-     color: #2c3e50;
-    margin-bottom: 20px;
-    font-size: clamp(1.2rem, 2.5vw, 1.5rem);
-}
-
-.presupuesto-section strong {
-    font-weight: 600;
-     color: #48bb78; /* Color distintivo para los montos */
-     font-size: clamp(1rem, 2.5vw, 1.2rem);
-}
-
-.presupuesto-section span {
-     color: #4a5568;
-     font-size: 0.95rem;
-}
-
-.budget-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #e2e8f0; /* Separador ligero */
-}
-
-.budget-item:last-child {
-    border-bottom: none; /* No hay borde en el último item */
-}
-
-.presupuesto-section br {
-    display: none; /* Ocultar los <br> si no son necesarios con flexbox */
 }
 
 </style>
