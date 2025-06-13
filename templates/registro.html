@@ -4,19 +4,29 @@
 <div class="container">
     <!-- Sección de Tasas de Cambio Responsiva -->
     <div class="tasa-container">
-        <h2 class="section-title">💱 Tasas de Cambio Actuales</h2>
+        <h2 class="section-title">💱 Tasa de Cambio Actual</h2> {# Título ajustado #}
         <div class="tasa-box">
             <div class="tasa-item">
-                <span>Dólar BCV:</span>
+                <span>Dólar BCV:</span> {# Solo queda BCV #}
                 <strong id="tasaBcv">Cargando...</strong>
             </div>
-            <div class="tasa-item">
-                <span>Dólar Promedio:</span>
-                <strong id="tasaPromedio">Cargando...</strong>
-            </div>
-            <small id="actualizacion">Última actualización: -</small>
+            {# Eliminado: Bloque para "Dólar Promedio" #}
+            <small id="actualizacion">Cargando tasas...</small>
         </div>
     </div>
+
+    {# Mostrar mensajes flash #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+            {% for category, message in messages %}
+                {# Usar category para estilos, e.g., alert-success, alert-danger #}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
 
     <!-- Formulario Responsivo -->
     <div class="responsive-form-container">
@@ -26,29 +36,29 @@
                 <!-- Columna 1 -->
                 <div class="form-column mobile-column">
                     <div class="form-group">
-                        <label>Ingresos Mensuales:</label>
-                        <input type="number" step="0.01" name="ingresos" value="{{ datos.ingresos }}" required>
+                        <label for="ingresos">Ingresos Mensuales (Bs):</label>
+                        <input type="number" step="0.01" name="ingresos" id="ingresos" value="{{ '%.2f'|format(datos.ingresos|float) if datos.ingresos is not none else '0.00' }}" required>
                     </div>
-                    
+
                     <div class="form-group">
-                        <label>Deudas Totales (Bs):</label>
-                        <input type="number" step="0.01" name="deudas" value="{{ datos.deudas }}" required>
+                        <label for="deudas">Deudas Totales (Bs):</label>
+                        <input type="number" step="0.01" name="deudas" id="deudas" value="{{ '%.2f'|format(datos.deudas|float) if datos.deudas is not none else '0.00' }}" required>
                     </div>
                 </div>
 
                 <!-- Columna 2 -->
                 <div class="form-column mobile-column">
-                    <h3 class="gastos-title">🏷️ Gastos Mensuales</h3>
+                    <h3 class="gastos-title">🏷️ Gastos Mensuales (Bs)</h3>
                     {% for categoria, valor in datos.gastos.items() %}
                     <div class="form-group">
-                        <label>{{ categoria }}:</label>
-                        <input type="number" step="0.01" name="{{ categoria.lower() }}" value="{{ valor }}" required>
+                        <label for="{{ categoria.lower() }}">{{ categoria }}:</label>
+                        <input type="number" step="0.01" name="{{ categoria.lower() }}" id="{{ categoria.lower() }}" value="{{ '%.2f'|format(valor|float) if valor is not none else '0.00' }}" required>
                     </div>
                     {% endfor %}
-                    
+
                     <div class="form-group">
-                        <label>Ahorros Actuales:</label>
-                        <input type="number" step="0.01" name="ahorros" value="{{ datos.ahorros }}" required>
+                        <label for="ahorros">Ahorros Actuales (Bs):</label>
+                        <input type="number" step="0.01" name="ahorros" id="ahorros" value="{{ '%.2f'|format(datos.ahorros|float) if datos.ahorros is not none else '0.00' }}" required>
                     </div>
                 </div>
             </div>
@@ -61,25 +71,39 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     fetch('/api/tasas')
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+             throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+        return response.json();
+    })
     .then(data => {
         const formatter = new Intl.NumberFormat('es-VE', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
 
+        // Solo actualizamos la tasa BCV
         document.getElementById('tasaBcv').textContent = `Bs. ${formatter.format(data.bcv)}`;
-        document.getElementById('tasaPromedio').textContent = `Bs. ${formatter.format(data.promedio)}`;
-        document.getElementById('actualizacion').textContent = `Actualizado: ${data.fecha}`;
-        
+
+        // Construir el texto de actualización
+        let updateText = `Última actualización: ${data.fecha}`;
+
+        // Añadir el mensaje de error si los datos son por defecto
         if(data.error) {
-            document.getElementById('actualizacion').textContent += ' (Datos locales)';
+            updateText += ' (No se pudieron obtener las tasas actuales)';
+            // Opcional: mostrar el mensaje de error del backend si data.mensaje existe
+            // if (data.mensaje) { updateText += ` (${data.mensaje})`; }
         }
+        document.getElementById('actualizacion').textContent = updateText;
+
     })
     .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('tasaBcv').textContent = 'No disponible';
-        document.getElementById('tasaPromedio').textContent = 'No disponible';
+        console.error('Error al cargar las tasas:', error);
+        // Mostrar indicadores de error en la interfaz
+        document.getElementById('tasaBcv').textContent = 'Error';
+        // Eliminado: Actualización de tasaPromedio en caso de error
+        document.getElementById('actualizacion').textContent = 'No se pudieron cargar las tasas.';
     });
 });
 </script>
@@ -92,6 +116,32 @@ document.addEventListener('DOMContentLoaded', () => {
     padding: 20px;
 }
 
+/* Mensajes Flash (opcional, si usas algún framework CSS como Bootstrap) */
+/* Estos estilos son básicos, adapta si usas un framework */
+.flash-messages {
+    margin-bottom: 20px;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+
 /* Tasas de Cambio */
 .tasa-container {
     background: #ffffff;
@@ -103,7 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .tasa-box {
     display: grid;
-    gap: 15px;
+    /* grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); <-- Puedes usar grid aquí también si quieres */
+    gap: 15px; /* Este gap ahora solo afecta si hay más de un elemento, como la fecha */
     margin-top: 20px;
 }
 
@@ -115,6 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
     background: #f8f9fa;
     border-radius: 8px;
     border: 1px solid #e9ecef;
+    /* Con un solo item, puede que quieras centrarlo o darle ancho total */
+    width: 100%; /* Hace que ocupe todo el ancho disponible en su columna/celda */
 }
 
 .tasa-item span {
@@ -134,6 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
     margin-top: 10px;
     color: #7f8c8d;
     font-size: 0.85rem;
+    width: 100%; /* Asegura que ocupe todo el ancho */
+    box-sizing: border-box; /* Incluye padding y borde en el ancho */
+    padding-right: 15px; /* Añade padding derecho para alineación */
 }
 
 /* Formulario */
@@ -249,6 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     #actualizacion {
         text-align: center;
+        padding-right: 0; /* Elimina padding derecho en móvil */
     }
 }
 
@@ -279,6 +336,9 @@ document.addEventListener('DOMContentLoaded', () => {
     .gastos-title {
         font-size: 1.1rem;
     }
+     .alert { /* Ajuste para flash messages en móvil */
+        margin: 0 10px 15px 10px;
+    }
 }
 
 @media (hover: none) {
@@ -288,6 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 }
 
+/* Estilo para el botón fijo en móviles */
 @media (max-width: 480px) {
     .responsive-button {
         position: fixed;
@@ -300,11 +361,11 @@ document.addEventListener('DOMContentLoaded', () => {
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         padding: 16px;
         margin: 0;
-        z-index: 1000;
+        z-index: 1000; /* Asegura que esté encima de otros elementos */
     }
 
     .responsive-form-container {
-        padding-bottom: 80px; /* Espacio para el botón fijo */
+        padding-bottom: 80px; /* Agrega espacio en la parte inferior para que el botón fijo no cubra el contenido */
     }
 }
 
