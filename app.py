@@ -39,21 +39,16 @@ def obtener_tasas():
     fecha_actualizacion = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
     # ** Lógica para obtener tasas de ExchangeRate-API **
-    # NOTA: Aunque hardcodeada, si la variable estuviera vacía por error, este check sería útil.
-    # Pero al estar hardcodeada, siempre tendrá un valor. Lo dejo por estructura.
     if not EXCHANGERATE_API_KEY:
-        # Esta rama teóricamente nunca se ejecutará al estar la clave hardcodeada
-        print("Advertencia: EXCHANGERATE_API_KEY no configurada. Usando valores por defecto.")
+        print("Advertencia: EXCHANGERATE_API_KEY no configurada. Usando valor por defecto.")
         return jsonify({
             'bcv': 92.83,
-            # Eliminado: 'promedio'
             'error': True,
             'fecha': fecha_actualizacion,
             'mensaje': 'API Key de tasas de cambio no configurada.'
         })
 
     # URL para obtener las tasas más recientes con USD como base
-    # ExchangeRate-API da una tasa USD->VES. La usaremos para "BCV".
     api_url = f'https://v6.exchangerate-api.com/v6/{EXCHANGERATE_API_KEY}/latest/USD'
 
     try:
@@ -66,21 +61,34 @@ def obtener_tasas():
         # Validar la respuesta de ExchangeRate-API
         if data.get('result') != 'success':
             print(f"Error de la API ExchangeRate-API: {data.get('error-type', 'Unknown error')}")
-            # Lanzamos un error para que caiga en el except y use los valores por defecto
             raise ValueError(f"API error: {data.get('error-type', 'Unknown error')}")
 
         # Obtener la tasa de VES (Bolívar Venezolano)
         ves_rate = data.get('conversion_rates', {}).get('VES')
 
         if ves_rate is None:
-             # Si no se encuentra la tasa de VES, tratamos como error de la API
              raise ValueError("Tasa de VES no encontrada en la respuesta de la API")
 
         # Si todo fue bien, retornamos la tasa obtenida para "BCV"
+        # Usaremos la fecha de actualización de la API si está disponible, sino la nuestra local
+        api_update_time = data.get('time_last_update_utc') # Formato UTC de la API
+        if api_update_time:
+            # Intentar convertir a formato local si es posible o usarla tal cual
+            try:
+                # Convertir la fecha UTC a un objeto datetime y luego formatear
+                dt_utc = datetime.strptime(api_update_time, '%a, %d %b %Y %H:%M:%S +0000')
+                # Aquí podrías convertir a hora local si necesitas, pero usar UTC es seguro
+                formatted_date = dt_utc.strftime('%d/%m/%Y %H:%M:%S')
+            except ValueError:
+                # Si el formato de fecha de la API cambia, usarlo tal cual o el local
+                formatted_date = api_update_time
+        else:
+            formatted_date = fecha_actualizacion # Usar la fecha local si la API no la da o falla el parseo
+
+
         return jsonify({
             'bcv': ves_rate,      # Usamos la tasa de la API para BCV
-            # Eliminado: 'promedio'
-            'fecha': data.get('time_last_update_utc'), # Usar la fecha de la API si está disponible y es útil
+            'fecha': formatted_date, # <-- Usar la fecha formateada (o UTC o local)
             'error': False,
             'mensaje': 'Tasas obtenidas de ExchangeRate-API.'
         })
@@ -88,21 +96,17 @@ def obtener_tasas():
     # Manejar errores específicos de la solicitud HTTP o de la API (invalid key, etc.)
     except requests.exceptions.RequestException as e:
         print(f"Error al conectar con ExchangeRate-API: {e}")
-        # Retornar los valores por defecto con la bandera de error
         return jsonify({
             'bcv': 92.83,  # Valor por defecto para BCV
-            # Eliminado: 'promedio'
             'error': True,
             'fecha': fecha_actualizacion, # Usar fecha local si falla la API
             'mensaje': f'Error al obtener tasas: {e}. Usando valor por defecto.'
         })
     # Manejar errores al procesar el JSON o al validar la respuesta de la API
-    except (KeyError, ValueError) as e:
+    except (KeyError, ValueError, TypeError) as e: # Añadir TypeError por si algo no es del tipo esperado
         print(f"Error al procesar respuesta de ExchangeRate-API: {e}")
-        # Retornar los valores por defecto con la bandera de error
         return jsonify({
             'bcv': 92.83,  # Valor por defecto para BCV
-            # Eliminado: 'promedio'
             'error': True,
             'fecha': fecha_actualizacion, # Usar fecha local si falla la API
             'mensaje': f'Error al procesar respuesta de API: {e}. Usando valor por defecto.'
@@ -110,25 +114,31 @@ def obtener_tasas():
     # Capturar cualquier otro error inesperado
     except Exception as e:
         print(f"Error inesperado en /api/tasas: {e}")
-        # Retornar los valores por defecto con la bandera de error
         return jsonify({
             'bcv': 92.83,  # Valor por defecto para BCV
-            # Eliminado: 'promedio'
             'error': True,
             'fecha': fecha_actualizacion, # Usar fecha local si falla la API
             'mensaje': f'Error inesperado: {e}. Usando valor por defecto.'
         })
 
 # Inicialización segura del modelo de Chat para Gemini
+# ** ESTA SECCIÓN ES LA QUE SE REVIERTE AL ESTADO ANTERIOR **
 def get_chat_session():
-    # Si no hay historial en la sesión, crea uno vacío
-    if 'chat_history' not in session:
-        session['chat_history'] = []
-
+    # Si 'chat' (el historial) no está en la sesión, inicializa uno vacío
+    if 'chat' not in session:
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        # Inicia un chat nuevo con historial vacío y guarda el historial en la sesión
+        # Flask session guarda objetos serializables. El historial del chat es una lista de objetos Content.
+        session['chat'] = model.start_chat(history=[]).history
+        # session.modified = True # No estrictamente necesario aquí, pero puede ayudar a asegurar que se guarda
+    # Crea una *nueva* instancia del modelo y del chat, cargando el historial guardado
+    # Esto es importante porque los objetos de chat de genai pueden no ser seguros para múltiples peticiones/hilos.
     model = genai.GenerativeModel('gemini-2.0-flash')
-    # Usa el historial de la sesión para iniciar el chat
-    chat = model.start_chat(history=session['chat_history'])
-    # NOTA: La sesión se actualiza DESPUÉS de enviar un mensaje exitosamente en chat_handler
+    chat = model.start_chat(history=session['chat']) # Carga el historial de la sesión
+    # NOTA: Cuando chat.send_message se llama en chat_handler,
+    # modifica el objeto 'chat.history' *en su lugar*.
+    # Flask debería detectar que el objeto dentro de la sesión ha sido modificado
+    # y guardar la sesión al final de la petición.
     return chat
 
 
@@ -142,7 +152,7 @@ def inicializar_datos():
             'deudas': 0.0,
             'ahorros': 0.0
         }
-        session.modified = True # Asegura que la sesión se guarde al inicializar
+        session.modified = True
 
 @app.route('/')
 def index():
@@ -235,9 +245,10 @@ def chat_handler():
         if not user_message or not isinstance(user_message, str) or len(user_message.strip()) == 0:
             return jsonify({"status": "error", "message": "Mensaje vacío o inválido"}), 400
 
-        chat = get_chat_session()
+        chat = get_chat_session() # Obtiene la sesión de chat cargada con el historial
 
         # Instrucciones para la IA
+        # Mantuve las instrucciones mejoradas para que responda en texto plano
         prompt_instructions = (
             "Eres un asesor financiero personal y amigable. Tu objetivo es proporcionar consejos y explicaciones sobre finanzas personales, presupuestos, ahorros, deudas e inversiones de manera clara y fácil de entender."
             "Responde a las preguntas del usuario EXCLUSIVAMENTE usando texto plano."
@@ -253,17 +264,15 @@ def chat_handler():
 
             # Validar si la respuesta tiene texto
             if not response or not hasattr(response, 'text') or not response.text:
-                 # Si la respuesta de la IA no tiene el formato esperado (texto plano)
-                 # Aunque las instrucciones al modelo deberían asegurar texto, puede fallar
                  print(f"La IA no devolvió texto: {response}")
                  return jsonify({
                     "status": "error",
                     "message": "La IA no pudo generar una respuesta de texto válida."
                  }), 500
 
-            # **Importante:** Actualizar el historial de la sesión *después* de una respuesta exitosa
-            session['chat_history'] = chat.history
-            session.modified = True # Asegura que la sesión se guarda
+            # ** REVERTIDO: No actualizamos explícitamente session['chat'] aquí. **
+            # Confiamos en que Flask detecte la modificación en chat.history (que es una referencia al objeto en la sesión)
+            # y guarde la sesión automáticamente al final de la petición.
 
             return jsonify({
                 "response": response.text,
@@ -273,7 +282,6 @@ def chat_handler():
         # Capturar errores específicos de la interacción con la API de Gemini
         except Exception as ai_error:
              print(f"Error de la API de Gemini al enviar mensaje: {ai_error}")
-             # Podrías intentar enviar un mensaje alternativo al usuario aquí
              return jsonify({
                 "status": "error",
                 "message": f"Lo siento, hubo un error al procesar tu solicitud con la IA. Por favor, intenta de nuevo más tarde. (Detalle: {ai_error})"
