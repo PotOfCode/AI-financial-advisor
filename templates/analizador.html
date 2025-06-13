@@ -22,17 +22,17 @@
         <br>Es un método para gestionar el dinero, dividiendo los ingresos en tres categorías: 50% para necesidades, 30% para deseos y 20% para ahorro o pago de deudas. Este enfoque ayuda a mantener un equilibrio financiero y a alcanzar metas a largo plazo.
         <div class="budget-item">
             <br><span>Necesidades (50%):</span>
-            {# CAMBIO REALIZADO AQUÍ: De $ a Bs. #}
+            {# CAMBIO SOLICITADO: De $ a Bs. #}
             <strong>Bs. {{ "%.2f"|format(presupuesto.necesidades) }}</strong>
         </div>
         <div class="budget-item">
             <span>Deseos (30%):</span>
-             {# CAMBIO REALIZADO AQUÍ: De $ a Bs. #}
+             {# CAMBIO SOLICITADO: De $ a Bs. #}
             <strong>Bs. {{ "%.2f"|format(presupuesto.deseos) }}</strong>
         </div>
         <div class="budget-item">
             <span>Ahorro (20%):</span>
-             {# CAMBIO REALIZADO AQUÍ: De $ a Bs. #}
+             {# CAMBIO SOLICITADO: De $ a Bs. #}
             <strong>Bs. {{ "%.2f"|format(presupuesto.ahorro) }}</strong>
         </div>
     </div>
@@ -46,8 +46,9 @@
     display: block;
     margin: 0 auto;
 }
-{# NOTA: Se mantienen los estilos originales que ya estaban presentes en tu código #}
+
 /* Estilos del presupuesto para consistencia visual */
+/* Estos estilos ya estaban en el código que proporcionaste */
 .presupuesto-section {
     margin-top: 30px;
     background: #ffffff;
@@ -88,7 +89,6 @@
 .presupuesto-section br {
     display: none; /* Ocultar los <br> si no son necesarios con flexbox */
 }
-
 
 </style>
 
