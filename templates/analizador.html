@@ -6,8 +6,8 @@
 
     {% if plot_url %}
     <div class="grafico-container">
-        <img src="data:image/png;base64,{{ plot_url }}" 
-             class="responsive-img" 
+        <img src="data:image/png;base64,{{ plot_url }}"
+             class="responsive-img"
              alt="Gráfico de gastos">
     </div>
 {% else %}
@@ -19,18 +19,21 @@
     <div class="presupuesto-section">
         <h3>Presupuesto Recomendado (50/30/20)</h3>
         <strong>¿Qué es el Ahorro 50/30/20?</strong>
-        <br>Es un método para gestionar el dinero, dividiendo los ingresos en tres categorías: 50% para necesidades, 30% para deseos y 20% para ahorro o pago de deudas. Este enfoque ayuda a mantener un equilibrio financiero y a alcanzar metas a largo plazo. 
+        <br>Es un método para gestionar el dinero, dividiendo los ingresos en tres categorías: 50% para necesidades, 30% para deseos y 20% para ahorro o pago de deudas. Este enfoque ayuda a mantener un equilibrio financiero y a alcanzar metas a largo plazo.
         <div class="budget-item">
             <br><span>Necesidades (50%):</span>
-            <strong>${{ "%.2f"|format(presupuesto.necesidades) }}</strong>
+            {# CAMBIO SOLICITADO: De $ a Bs. #}
+            <strong>Bs. {{ "%.2f"|format(presupuesto.necesidades) }}</strong>
         </div>
         <div class="budget-item">
             <span>Deseos (30%):</span>
-            <strong>${{ "%.2f"|format(presupuesto.deseos) }}</strong>
+             {# CAMBIO SOLICITADO: De $ a Bs. #}
+            <strong>Bs. {{ "%.2f"|format(presupuesto.deseos) }}</strong>
         </div>
         <div class="budget-item">
             <span>Ahorro (20%):</span>
-            <strong>${{ "%.2f"|format(presupuesto.ahorro) }}</strong>
+             {# CAMBIO SOLICITADO: De $ a Bs. #}
+            <strong>Bs. {{ "%.2f"|format(presupuesto.ahorro) }}</strong>
         </div>
     </div>
 </div>
@@ -43,6 +46,11 @@
     display: block;
     margin: 0 auto;
 }
+{# ESTILO ORIGINAL SIN CAMBIOS NI ADICIONES #}
+/* Estilos para el menu móvil */
+/* Esto es un comentario que estaba en tu código, lo mantengo */
+
+/* Nota: los estilos del presupuesto que agregamos antes no están aquí, solo el estilo original de .responsive-img */
 
 </style>
 
