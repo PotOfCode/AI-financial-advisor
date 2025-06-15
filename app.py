@@ -11,24 +11,21 @@ import matplotlib
 matplotlib.use('Agg')
 import os
 from flask_cors import CORS
-from datetime import datetime # Importar datetime
+from datetime import datetime
 
 app = Flask(__name__)
 
-# Configura tu SECRET_KEY (idealmente desde variables de entorno)
-# app.secret_key = os.environ.get('SECRET_KEY')
-app.secret_key = 'IL4LbtIP4r' # Asegúrate de usar una clave segura en producción
+app.secret_key = os.environ.get('SECRET_KEY')
 
 CORS(app)  # Permite solicitudes desde cualquier origen
 
 # Configuración de las APIs
-# Asegúrate de configurar esta variable de entorno antes de ejecutar la app
-GOOGLE_API_KEY = os.environ.get('GEMINI_API_KEY') # Valor por defecto para desarrollo, NO USAR EN PRODUCCIÓN SIN CLAVE REAL
+# ** API para IA de Google **
+GOOGLE_API_KEY = os.environ.get('GEMINI_API_KEY')
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# ** CLAVE API para Tasas de Cambio (HARDCODEADA) **
-# ⚠ ADVERTENCIA: Esto no es seguro para producción.
-EXCHANGERATE_API_KEY = '8511b2bdde87e2a1913b671f'
+# ** API para Tasas de Cambio **
+EXCHANGERATE_API_KEY = os.environ.get('CHANGE_API_KEY')
 
 # --- Rutas y Lógica de la Aplicación ---
 
