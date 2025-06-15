@@ -23,8 +23,7 @@ CORS(app)  # Permite solicitudes desde cualquier origen
 
 # Configuración de las APIs
 # Asegúrate de configurar esta variable de entorno antes de ejecutar la app
-GOOGLE_API_KEY = os.environ.get(
-    'GEMINI_API_KEY', 'AIzaSyDwd3D2AFDF9MLzSSx7SPuHG9KVZcuQ6-M') # Valor por defecto para desarrollo, NO USAR EN PRODUCCIÓN SIN CLAVE REAL
+GOOGLE_API_KEY = os.environ.get('GEMINI_API_KEY') # Valor por defecto para desarrollo, NO USAR EN PRODUCCIÓN SIN CLAVE REAL
 genai.configure(api_key=GOOGLE_API_KEY)
 
 # ** CLAVE API para Tasas de Cambio (HARDCODEADA) **
