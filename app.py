@@ -27,7 +27,7 @@ genai.configure(api_key=GOOGLE_API_KEY)
 # ** API para Tasas de Cambio **
 EXCHANGERATE_API_KEY = os.environ.get('CHANGE_API_KEY')
 
-# --- Rutas y Lógica de la Aplicación ---
+# Rutas y Lógica de la Aplicación
 
 @app.route('/api/tasas')
 def obtener_tasas():
@@ -163,8 +163,6 @@ def registro():
 
     if request.method == 'POST':
         try:
-            # Intenta convertir todos los valores a float antes de asignarlos
-            # Usa .get() con valor por defecto (0.0) para evitar KeyError si un campo falta
             ingresos = float(request.form.get('ingresos', 0.0))
             comida = float(request.form.get('comida', 0.0))
             transporte = float(request.form.get('transporte', 0.0))
