@@ -111,7 +111,7 @@ def obtener_tasas():
     except Exception as e:
         print(f"Error inesperado en /api/tasas: {e}")
         return jsonify({
-            'bcv': 92.83,  # Valor por defecto para BCV
+            'bcv': 92.83,
             'error': True,
             'fecha': fecha_actualizacion, # Usar fecha local si falla la API
             'mensaje': f'Error inesperado: {e}. Usando valor por defecto.'
