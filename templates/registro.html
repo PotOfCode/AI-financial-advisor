@@ -4,13 +4,12 @@
 <div class="container">
     <!-- Sección de Tasas de Cambio Responsiva -->
     <div class="tasa-container">
-        <h2 class="section-title">💱 Tasa de Cambio Actual</h2> {# Título ajustado #}
+        <h2 class="section-title">💱 Tasa de Cambio Actual</h2> 
         <div class="tasa-box">
             <div class="tasa-item">
-                <span>Dólar BCV:</span> {# Solo queda BCV #}
+                <span>Dólar BCV:</span>
                 <strong id="tasaBcv">Cargando...</strong>
             </div>
-            {# Eliminado: Bloque para "Dólar Promedio" #}
             <small id="actualizacion">Cargando tasas...</small>
         </div>
     </div>
@@ -37,28 +36,42 @@
                 <div class="form-column mobile-column">
                     <div class="form-group">
                         <label for="ingresos">Ingresos Mensuales (Bs):</label>
-                        <input type="number" step="0.01" name="ingresos" id="ingresos" value="{{ '%.2f'|format(datos.ingresos|float) if datos.ingresos is not none else '0.00' }}" required>
+                        <input type="number" step="0.01" name="ingresos" id="ingresos" value="{{ '%.2f'|format(datos.ingresos|float) if datos and datos.ingresos is not none else '0.00' }}" required>
                     </div>
 
                     <div class="form-group">
                         <label for="deudas">Deudas Totales (Bs):</label>
-                        <input type="number" step="0.01" name="deudas" id="deudas" value="{{ '%.2f'|format(datos.deudas|float) if datos.deudas is not none else '0.00' }}" required>
+                        <input type="number" step="0.01" name="deudas" id="deudas" value="{{ '%.2f'|format(datos.deudas|float) if datos and datos.deudas is not none else '0.00' }}" required>
                     </div>
                 </div>
 
                 <!-- Columna 2 -->
                 <div class="form-column mobile-column">
                     <h3 class="gastos-title">🏷️ Gastos Mensuales (Bs)</h3>
-                    {% for categoria, valor in datos.gastos.items() %}
                     <div class="form-group">
-                        <label for="{{ categoria.lower() }}">{{ categoria }}:</label>
-                        <input type="number" step="0.01" name="{{ categoria.lower() }}" id="{{ categoria.lower() }}" value="{{ '%.2f'|format(valor|float) if valor is not none else '0.00' }}" required>
+                        <label for="comida">Comida:</label>
+                        <input type="number" step="0.01" name="comida" id="comida" value="{{ '%.2f'|format(datos.gasto_comida|float) if datos and datos.gasto_comida is not none else '0.00' }}" required>
                     </div>
-                    {% endfor %}
+
+                    <div class="form-group">
+                        <label for="transporte">Transporte:</label>
+                        <input type="number" step="0.01" name="transporte" id="transporte" value="{{ '%.2f'|format(datos.gasto_transporte|float) if datos and datos.gasto_transporte is not none else '0.00' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="vivienda">Vivienda:</label>
+                        <input type="number" step="0.01" name="vivienda" id="vivienda" value="{{ '%.2f'|format(datos.gasto_vivienda|float) if datos and datos.gasto_vivienda is not none else '0.00' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="otros">Otros:</label>
+                        <input type="number" step="0.01" name="otros" id="otros" value="{{ '%.2f'|format(datos.gasto_otros|float) if datos and datos.gasto_otros is not none else '0.00' }}" required>
+                    </div>
 
                     <div class="form-group">
                         <label for="ahorros">Ahorros Actuales (Bs):</label>
-                        <input type="number" step="0.01" name="ahorros" id="ahorros" value="{{ '%.2f'|format(datos.ahorros|float) if datos.ahorros is not none else '0.00' }}" required>
+                        {# Accede directamente al atributo 'ahorros' #}
+                        <input type="number" step="0.01" name="ahorros" id="ahorros" value="{{ '%.2f'|format(datos.ahorros|float) if datos and datos.ahorros is not none else '0.00' }}" required>
                     </div>
                 </div>
             </div>
@@ -68,6 +81,7 @@
     </div>
 </div>
 
+{# Script para tasas de cambio #}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     fetch('/api/tasas')
@@ -83,13 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
             maximumFractionDigits: 2
         });
 
-        // Solo actualizamos la tasa BCV
         document.getElementById('tasaBcv').textContent = `Bs. ${formatter.format(data.bcv)}`;
 
-        // Construir el texto de actualización
         let updateText = `Última actualización: ${data.fecha}`;
 
-        // Añadir el mensaje de error si los datos son por defecto
         if(data.error) {
             updateText += ' (No se pudieron obtener las tasas actuales)';
             // Opcional: mostrar el mensaje de error del backend si data.mensaje existe
@@ -100,14 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .catch(error => {
         console.error('Error al cargar las tasas:', error);
-        // Mostrar indicadores de error en la interfaz
         document.getElementById('tasaBcv').textContent = 'Error';
-        // Eliminado: Actualización de tasaPromedio en caso de error
         document.getElementById('actualizacion').textContent = 'No se pudieron cargar las tasas.';
     });
 });
 </script>
 
+{# Estilos #}
 <style>
 /* ============= ESTILOS BASE ============= */
 .container {
@@ -153,8 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .tasa-box {
     display: grid;
-    /* grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); <-- Puedes usar grid aquí también si quieres */
-    gap: 15px; /* Este gap ahora solo afecta si hay más de un elemento, como la fecha */
+    gap: 15px;
     margin-top: 20px;
 }
 
@@ -166,8 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     background: #f8f9fa;
     border-radius: 8px;
     border: 1px solid #e9ecef;
-    /* Con un solo item, puede que quieras centrarlo o darle ancho total */
-    width: 100%; /* Hace que ocupe todo el ancho disponible en su columna/celda */
+    width: 100%;
 }
 
 .tasa-item span {
@@ -187,9 +195,9 @@ document.addEventListener('DOMContentLoaded', () => {
     margin-top: 10px;
     color: #7f8c8d;
     font-size: 0.85rem;
-    width: 100%; /* Asegura que ocupe todo el ancho */
-    box-sizing: border-box; /* Incluye padding y borde en el ancho */
-    padding-right: 15px; /* Añade padding derecho para alineación */
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 15px;
 }
 
 /* Formulario */
@@ -305,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     #actualizacion {
         text-align: center;
-        padding-right: 0; /* Elimina padding derecho en móvil */
+        padding-right: 0;
     }
 }
 
@@ -336,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .gastos-title {
         font-size: 1.1rem;
     }
-     .alert { /* Ajuste para flash messages en móvil */
+     .alert {
         margin: 0 10px 15px 10px;
     }
 }
@@ -361,11 +369,11 @@ document.addEventListener('DOMContentLoaded', () => {
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         padding: 16px;
         margin: 0;
-        z-index: 1000; /* Asegura que esté encima de otros elementos */
+        z-index: 1000;
     }
 
     .responsive-form-container {
-        padding-bottom: 80px; /* Agrega espacio en la parte inferior para que el botón fijo no cubra el contenido */
+        padding-bottom: 80px;
     }
 }
 

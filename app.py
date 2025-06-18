@@ -9,6 +9,8 @@ from io import BytesIO
 import base64
 import matplotlib
 matplotlib.use('Agg')
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 import os
 from flask_cors import CORS
 from datetime import datetime
@@ -26,6 +28,34 @@ genai.configure(api_key=GOOGLE_API_KEY)
 
 # ** API para Tasas de Cambio **
 EXCHANGERATE_API_KEY = os.environ.get('CHANGE_API_KEY')
+
+#* --- Configuración de la Base de Datos SQLite ---
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'site.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+    #* --- Modelos de Base de Datos ---
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    identifier = db.Column(db.String(120), unique=True, nullable=False) # nullable=False significa que no puede ser nulo
+    financial_data = db.relationship('FinancialData', backref='owner', uselist=False, lazy='joined')
+
+class FinancialData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    ingresos = db.Column(db.Float, default=0.0, nullable=False)
+    gasto_comida = db.Column(db.Float, default=0.0, nullable=False)
+    gasto_transporte = db.Column(db.Float, default=0.0, nullable=False)
+    gasto_vivienda = db.Column(db.Float, default=0.0, nullable=False)
+    gasto_otros = db.Column(db.Float, default=0.0, nullable=False)
+    deudas = db.Column(db.Float, default=0.0, nullable=False)
+    ahorros = db.Column(db.Float, default=0.0, nullable=False)
+    
+    #* --- Fin de Modelos ---
+#* --- Fin de Configuración de Base de Datos ---
 
 # Rutas y Lógica de la Aplicación
 
@@ -137,18 +167,43 @@ def get_chat_session():
     # y guardar la sesión al final de la petición.
     return chat
 
-
 @app.before_request
-def inicializar_datos():
-    # Inicializa session['datos'] con valores float por defecto si no existe
-    if 'datos' not in session:
-        session['datos'] = {
-            'ingresos': 0.0,
-            'gastos': {'Comida': 0.0, 'Transporte': 0.0, 'Vivienda': 0.0, 'Otros': 0.0},
-            'deudas': 0.0,
-            'ahorros': 0.0
-        }
-        session.modified = True
+def load_user_and_data():
+    default_identifier = 'usuario_unico_del_asesor'
+    user = User.query.filter_by(identifier=default_identifier).first()
+    if not user:
+        try:
+            user = User(identifier=default_identifier)
+            db.session.add(user)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error al crear usuario por defecto: {e}")
+            return
+
+    financial_data = FinancialData.query.filter_by(user_id=user.id).first()
+
+    if not financial_data:
+        try:
+            financial_data = FinancialData(
+                user_id=user.id,
+                ingresos=0.0,
+                gasto_comida=0.0,
+                gasto_transporte=0.0,
+                gasto_vivienda=0.0,
+                gasto_otros=0.0,
+                deudas=0.0,
+                ahorros=0.0
+            )
+            db.session.add(financial_data)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error al crear datos financieros iniciales: {e}")
+            return
+
+    session['current_user_id'] = user.id
+    session.modified = True
 
 @app.route('/')
 def index():
@@ -157,9 +212,13 @@ def index():
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
-    # Asegurar que session['datos'] existe antes de intentar acceder a ella
-    if 'datos' not in session:
-        inicializar_datos() # Llama a la función para inicializarla si no existe
+    user_id = session.get('current_user_id') # Obtenemos el ID de la sesión
+    user = User.query.get(user_id) # Buscamos el objeto User
+    user_financial_data = user.financial_data
+
+    if not user_financial_data:
+        flash('Error interno: No se pudieron cargar tus datos financieros.', 'danger')
+        return redirect(url_for('index'))
 
     if request.method == 'POST':
         try:
@@ -171,29 +230,26 @@ def registro():
             deudas = float(request.form.get('deudas', 0.0))
             ahorros = float(request.form.get('ahorros', 0.0))
 
-            session['datos'] = {
-                'ingresos': max(0.0, ingresos),
-                'gastos': {
-                    'Comida': max(0.0, comida),
-                    'Transporte': max(0.0, transporte),
-                    'Vivienda': max(0.0, vivienda),
-                    'Otros': max(0.0, otros)
-                },
-                'deudas': max(0.0, deudas),
-                'ahorros': max(0.0, ahorros)
-            }
-            session.modified = True # Marca la sesión como modificada para que se guarde
-            flash('Datos actualizados correctamente', 'success') # Añade mensaje de éxito
+            user_financial_data.ingresos = max(0.0, ingresos)
+            user_financial_data.gasto_comida = max(0.0, comida)
+            user_financial_data.gasto_transporte = max(0.0, transporte)
+            user_financial_data.gasto_vivienda = max(0.0, vivienda)
+            user_financial_data.gasto_otros = max(0.0, otros)
+            user_financial_data.deudas = max(0.0, deudas)
+            user_financial_data.ahorros = max(0.0, ahorros)
+
+            db.session.commit()
+            flash('Datos actualizados correctamente', 'success')
         except ValueError:
-            flash('Error: Ingresa solo valores numéricos válidos.', 'danger') # Clase 'danger' para estilos de error
+            flash('Error: Ingresa solo valores numéricos válidos.', 'danger')
+            db.session.rollback()
+
         except Exception as e:
-             flash(f'Error al guardar datos: {e}', 'danger') # Captura otros errores potenciales
-        # Si hubo un POST, generalmente quieres que el usuario vea los datos actualizados (o el error flash)
-        # en la misma página de registro. No redirigimos si no es necesario.
-        # return redirect(url_for('registro')) # Esto redirigiría siempre
+            db.session.rollback() # IMPORTANTE: Deshacer cambios pendientes si hay un error
+            flash(f'Error al guardar datos: {e}', 'danger')
 
     # En GET request o después de POST, renderizar la plantilla con los datos actuales de la sesión
-    return render_template('registro.html', datos=session.get('datos', {})) # Usar .get con default {} por si acaso
+    return render_template('registro.html', datos=user_financial_data) # Usar .get con default {} por si acaso
 
 @app.route('/asistente')
 def asistente():
@@ -293,70 +349,54 @@ def chat_handler():
 
 @app.route('/analizador')
 def analizador():
-    # Asegurar que session['datos'] existe antes de intentar acceder a ella
-    if 'datos' not in session:
-        inicializar_datos() # Llama a la función para inicializarla si no existe
+    user_id = session.get('current_user_id')
+    user = User.query.get(user_id)
+    user_financial_data = user.financial_data
 
-    # Obtener datos de gastos de la sesión
-    gastos = session.get('datos', {}).get('gastos', {}) # Usar .get() para manejo seguro
+    if not user_financial_data:
 
-    # Filtrar categorías con valores mayores a 0 y asegurar que son float
+        flash('Por favor, registra tus datos financieros primero.', 'info')
+        return redirect(url_for('registro'))
+
+    gastos = {
+    'Comida': user_financial_data.gasto_comida,
+    'Transporte': user_financial_data.gasto_transporte,
+    'Vivienda': user_financial_data.gasto_vivienda,
+    'Otros': user_financial_data.gasto_otros
+    }
+    ingresos = user_financial_data.ingresos # Obtener ingresos de la DB
+
     valores = []
     etiquetas = []
     for categoria, monto in gastos.items():
-        try:
-            monto = float(monto) # Convertir a float
-            if monto > 0:
-                valores.append(monto)
-                etiquetas.append(categoria)
-        except (ValueError, TypeError):
-            # Ignorar o loguear si un valor de gasto no es un número
-            print(f"Advertencia: Valor no numérico para el gasto '{categoria}': {monto}. Se ignorará para el gráfico.")
-            pass # Ignorar este par categoría/monto si no es válido
+        if monto > 0:
+            valores.append(monto)
+            etiquetas.append(categoria)
 
-    # Verificar si hay datos válidos para graficar
-    if not valores: # Si la lista de valores está vacía
         plot_url = None
-    else:
-        # Generar gráfico de pastel (o dona)
-        img = BytesIO()
-        plt.figure(figsize=(8, 8))
-        plt.pie(valores,
-                labels=etiquetas,
-                autopct='%1.1f%%', # Formato de porcentaje con un decimal
-                startangle=140,    # Ángulo inicial
-                wedgeprops=dict(width=0.4, edgecolor='white')) # Estilo de dona
-        plt.title('Distribución de Gastos', fontsize=16)
-        plt.axis('equal') # Asegura que el círculo es un círculo
-        plt.tight_layout() # Ajusta el diseño para evitar cortes
+        if valores:
+            # Generar gráfico de pastel (versión original simple)
+            img = BytesIO()
+            plt.figure(figsize=(8, 8))
+            plt.pie(valores, labels=etiquetas, autopct='%1.1f%%', startangle=140)
+            plt.title('Distribución de Gastos')
+            plt.axis('equal')
+            plt.savefig(img, format='png')
+            plt.close()
+            img.seek(0)
+            plot_url = base64.b64encode(img.getvalue()).decode('utf8')
 
-        # Guardar en BytesIO, cerrar figura y codificar
-        plt.savefig(img, format='png')
-        plt.close() # Cierra la figura para liberar memoria
-        img.seek(0) # Mover el cursor al inicio del buffer
-        plot_url = base64.b64encode(img.getvalue()).decode('utf8')
-
-    # Regla 50/30/20: Calcular el presupuesto recomendado
-    try:
-        ingresos = float(session.get('datos', {}).get('ingresos', 0.0)) # Usar .get() con default
-    except (ValueError, TypeError):
-        ingresos = 0.0 # Default en caso de error de tipo/valor
-
-    # Asegurar que los ingresos no sean negativos antes del cálculo
-    ingresos = max(0.0, ingresos)
-
-    presupuesto = {
-        'necesidades': ingresos * 0.5,
-        'deseos': ingresos * 0.3,
-        'ahorro': ingresos * 0.2
-    }
-    # Asegurarse de que los resultados del presupuesto no sean negativos
-    presupuesto = {k: max(0.0, v) for k, v in presupuesto.items()}
+        presupuesto = {
+            'necesidades': ingresos * 0.5,
+            'deseos': ingresos * 0.3,
+            'ahorro': ingresos * 0.2
+        }
+        presupuesto = {k: max(0.0, v) for k, v in presupuesto.items()}
 
 
     return render_template('analizador.html',
-                         plot_url=plot_url,
-                         presupuesto=presupuesto)
+                        plot_url=plot_url,
+                        presupuesto=presupuesto)
 
 if __name__ == '__main__':
     # Configuración de host y puerto, y modo debug desde variables de entorno
