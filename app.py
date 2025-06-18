@@ -3,7 +3,6 @@ from flask import jsonify
 import google.generativeai as genai
 from flask import flash
 import requests
-import pandas as pd
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
