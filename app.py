@@ -11,6 +11,8 @@ import matplotlib
 matplotlib.use('Agg')
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user # Importar Flask-Login
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from flask_cors import CORS
 from datetime import datetime
@@ -30,22 +32,54 @@ genai.configure(api_key=GOOGLE_API_KEY)
 EXCHANGERATE_API_KEY = os.environ.get('CHANGE_API_KEY')
 
 #* --- Configuración de la Base de Datos SQLite ---
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'site.db')
+database_url = os.environ.get('DATABASE_URL')
+if database_url is None:
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'site.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+#* --- Configuración de Flask-Login ---
+login_manager = LoginManager() # Crea una instancia de LoginManager
+login_manager.init_app(app)    # Vincula LoginManager a tu app Flask
+login_manager.login_view = 'login' # Especifica el nombre de la función (ruta) de login para redirecciones automáticas
+login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.' # Mensaje flash si se requiere login
+login_manager.login_message_category = 'info' # Categoría del mensaje flash
+
+# Función requerida por Flask-Login para recargar el objeto User a partir del user_id almacenado en la sesión
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(User, int(user_id))
+
     #* --- Modelos de Base de Datos ---
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    identifier = db.Column(db.String(120), unique=True, nullable=False) # nullable=False significa que no puede ser nulo
+# Modelo para el usuario
+# Hereda de UserMixin para integrarse con Flask-Login
+class User(UserMixin, db.Model): # <-- Añadir UserMixin
+    id = db.Column(db.Integer, primary_key=True) # Clave primaria
+    # Cambiamos 'identifier' a 'username' (o podrías usar 'email' y validar formato)
+    username = db.Column(db.String(80), unique=True, nullable=False, index=True) # El nombre de usuario para login
+    password_hash = db.Column(db.String(128), nullable=False) # Campo para almacenar la contraseña hasheada
+
+    # Relación con FinancialData (sin cambios aquí)
     financial_data = db.relationship('FinancialData', backref='owner', uselist=False, lazy='joined')
+
+    # Método para hashear la contraseña antes de guardarla
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    # Método para verificar una contraseña ingresada contra el hash almacenado
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    # Representación (sin cambios)
+    def __repr__(self):
+        return f"<User {self.username}>"
 
 class FinancialData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True, index=True)
     ingresos = db.Column(db.Float, default=0.0, nullable=False)
     gasto_comida = db.Column(db.Float, default=0.0, nullable=False)
     gasto_transporte = db.Column(db.Float, default=0.0, nullable=False)
@@ -54,6 +88,9 @@ class FinancialData(db.Model):
     deudas = db.Column(db.Float, default=0.0, nullable=False)
     ahorros = db.Column(db.Float, default=0.0, nullable=False)
     
+    def __repr__(self):
+        return f"<FinancialData ID:{self.id} for User {self.user_id}>"
+
     #* --- Fin de Modelos ---
 #* --- Fin de Configuración de Base de Datos ---
 
@@ -167,54 +204,15 @@ def get_chat_session():
     # y guardar la sesión al final de la petición.
     return chat
 
-@app.before_request
-def load_user_and_data():
-    default_identifier = 'usuario_unico_del_asesor'
-    user = User.query.filter_by(identifier=default_identifier).first()
-    if not user:
-        try:
-            user = User(identifier=default_identifier)
-            db.session.add(user)
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error al crear usuario por defecto: {e}")
-            return
-
-    financial_data = FinancialData.query.filter_by(user_id=user.id).first()
-
-    if not financial_data:
-        try:
-            financial_data = FinancialData(
-                user_id=user.id,
-                ingresos=0.0,
-                gasto_comida=0.0,
-                gasto_transporte=0.0,
-                gasto_vivienda=0.0,
-                gasto_otros=0.0,
-                deudas=0.0,
-                ahorros=0.0
-            )
-            db.session.add(financial_data)
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error al crear datos financieros iniciales: {e}")
-            return
-
-    session['current_user_id'] = user.id
-    session.modified = True
-
 @app.route('/')
 def index():
     # Redirigir directamente a registro
     return redirect(url_for('registro'))
 
 @app.route('/registro', methods=['GET', 'POST'])
+@login_required
 def registro():
-    user_id = session.get('current_user_id') # Obtenemos el ID de la sesión
-    user = User.query.get(user_id) # Buscamos el objeto User
-    user_financial_data = user.financial_data
+    user_financial_data = current_user.financial_data
 
     if not user_financial_data:
         flash('Error interno: No se pudieron cargar tus datos financieros.', 'danger')
@@ -252,7 +250,9 @@ def registro():
     return render_template('registro.html', datos=user_financial_data) # Usar .get con default {} por si acaso
 
 @app.route('/asistente')
+@login_required
 def asistente():
+    user_financial_data = current_user.financial_data
     return render_template('asistente.html')
 
 @app.errorhandler(404)
@@ -286,16 +286,33 @@ def handle_error(error):
 
 
 @app.route('/api/chat', methods=['POST'])
+@login_required
 def chat_handler():
     try:
         data = request.get_json()
         user_message = data.get('message', '')
 
-        # Validar entrada: debe ser string no vacío
         if not user_message or not isinstance(user_message, str) or len(user_message.strip()) == 0:
             return jsonify({"status": "error", "message": "Mensaje vacío o inválido"}), 400
 
         chat = get_chat_session() # Obtiene la sesión de chat cargada con el historial
+
+        # Obtener datos financieros del usuario ACTUALMENTE LOGUEADO para contexto
+        user_financial_data = current_user.financial_data # Accede a los datos del usuario logueado
+
+        financial_context = ""
+        if user_financial_data: # Solo si existen datos
+             financial_context = (
+                f"Aquí están los datos financieros actuales del usuario (Ingresos/Gastos/Deudas/Ahorros): "
+                f"Ingresos: {user_financial_data.ingresos}, "
+                f"Gastos Comida: {user_financial_data.gasto_comida}, "
+                f"Gastos Transporte: {user_financial_data.gasto_transporte}, "
+                f"Gastos Vivienda: {user_financial_data.gasto_vivienda}, "
+                f"Gastos Otros: {user_financial_data.gasto_otros}, "
+                f"Deudas Totales: {user_financial_data.deudas}, "
+                f"Ahorros Actuales: {user_financial_data.ahorros}. "
+                f"Considera esta información si es relevante para responder la pregunta del usuario, pero mantén tus respuestas en texto plano."
+            )
 
         # Instrucciones para la IA
         # Mantuve las instrucciones mejoradas para que responda en texto plano
@@ -310,7 +327,8 @@ def chat_handler():
 
         # Intentar enviar el mensaje a la IA
         try:
-            response = chat.send_message(prompt_instructions + user_message)
+            full_prompt = prompt_instructions + user_message
+            response = chat.send_message(full_prompt)
 
             # Validar si la respuesta tiene texto
             if not response or not hasattr(response, 'text') or not response.text:
@@ -348,23 +366,22 @@ def chat_handler():
 
 
 @app.route('/analizador')
+@login_required
 def analizador():
-    user_id = session.get('current_user_id')
-    user = User.query.get(user_id)
-    user_financial_data = user.financial_data
+    user_financial_data = current_user.financial_data
 
     if not user_financial_data:
-
-        flash('Por favor, registra tus datos financieros primero.', 'info')
+        flash('Error interno: No se pudieron cargar tus datos financieros. Intenta registrar tus datos de nuevo.', 'danger')
+        # Quizás redirigir a registro o mostrar página de error específica
         return redirect(url_for('registro'))
 
     gastos = {
-    'Comida': user_financial_data.gasto_comida,
-    'Transporte': user_financial_data.gasto_transporte,
-    'Vivienda': user_financial_data.gasto_vivienda,
-    'Otros': user_financial_data.gasto_otros
+        'Comida': user_financial_data.gasto_comida,
+        'Transporte': user_financial_data.gasto_transporte,
+        'Vivienda': user_financial_data.gasto_vivienda,
+        'Otros': user_financial_data.gasto_otros
     }
-    ingresos = user_financial_data.ingresos # Obtener ingresos de la DB
+    ingresos = user_financial_data.ingresos
 
     valores = []
     etiquetas = []
@@ -373,18 +390,17 @@ def analizador():
             valores.append(monto)
             etiquetas.append(categoria)
 
-        plot_url = None
-        if valores:
-            # Generar gráfico de pastel (versión original simple)
-            img = BytesIO()
-            plt.figure(figsize=(8, 8))
-            plt.pie(valores, labels=etiquetas, autopct='%1.1f%%', startangle=140)
-            plt.title('Distribución de Gastos')
-            plt.axis('equal')
-            plt.savefig(img, format='png')
-            plt.close()
-            img.seek(0)
-            plot_url = base64.b64encode(img.getvalue()).decode('utf8')
+    plot_url = None # Inicializa plot_url fuera del bucle
+    if valores: # Genera la gráfica solo si hay valores > 0
+        img = BytesIO()
+        plt.figure(figsize=(8, 8))
+        plt.pie(valores, labels=etiquetas, autopct='%1.1f%%', startangle=140)
+        plt.title('Distribución de Gastos')
+        plt.axis('equal')
+        plt.savefig(img, format='png')
+        plt.close()
+        img.seek(0)
+        plot_url = base64.b64encode(img.getvalue()).decode('utf8')
 
         presupuesto = {
             'necesidades': ingresos * 0.5,
@@ -397,6 +413,114 @@ def analizador():
     return render_template('analizador.html',
                         plot_url=plot_url,
                         presupuesto=presupuesto)
+
+# --- Ruta para Registro de Nuevos Usuarios ---
+@app.route('/registro_usuario', methods=['GET', 'POST'])
+def registro_usuario():
+    # Si el usuario ya está logueado, no tiene sentido que se registre de nuevo, redirigir
+    if current_user.is_authenticated:
+        flash('Ya has iniciado sesión.', 'info')
+        return redirect(url_for('registro')) # O donde quieras redirigir a usuarios logueados
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password') # Contraseña en texto plano del formulario
+
+        # --- Validación Básica del Formulario ---
+        if not username or not password:
+            flash('Username y password son requeridos.', 'danger')
+            # Vuelve a renderizar el template, pasando el username para que el usuario no lo tenga que escribir de nuevo
+            return render_template('registro_usuario.html', username=username)
+
+        # --- Verificar si el username ya existe en la DB ---
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('El username ya existe. Por favor, elige otro.', 'danger')
+            return render_template('registro_usuario.html', username=username)
+
+        # --- Crear Nuevo Usuario y sus Datos Financieros Iniciales ---
+        try:
+            # Crea una nueva instancia del modelo User
+            new_user = User(username=username)
+            # Hashea la contraseña ANTES de asignarla al modelo
+            new_user.set_password(password) # Usando el método que añadimos al modelo
+
+            # Añadir el nuevo usuario a la sesión de la base de datos y guardarlo
+            # Hacemos commit aquí para que el nuevo usuario tenga un 'id' asignado antes de crear FinancialData
+            db.session.add(new_user)
+            db.session.commit()
+
+            # Crea la entrada de FinancialData vinculada al nuevo usuario
+            initial_financial_data = FinancialData(
+                user_id=new_user.id, # Usa el ID del usuario recién creado
+                ingresos=0.0,
+                gasto_comida=0.0, gasto_transporte=0.0,
+                gasto_vivienda=0.0, gasto_otros=0.0,
+                deudas=0.0, ahorros=0.0
+            )
+            db.session.add(initial_financial_data)
+            db.session.commit() # Guarda los datos financieros iniciales
+
+            flash('Registro exitoso. ¡Ya puedes iniciar sesión!', 'success')
+            return redirect(url_for('login')) # Redirige a la página de login después del registro exitoso
+
+        except Exception as e:
+            # Si ocurre algún error (ej. error de DB), deshace los cambios y muestra un mensaje
+            db.session.rollback()
+            flash(f'Error al registrar usuario: {e}', 'danger')
+            # app.logger.error(f"Error registering user: {e}")
+            return render_template('registro_usuario.html', username=username)
+
+
+    # Método GET: Simplemente muestra el formulario de registro
+    return render_template('registro_usuario.html')
+
+# --- Ruta para Inicio de Sesión ---
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    # Si el usuario ya está logueado, redirigir
+    if current_user.is_authenticated:
+        flash('Ya has iniciado sesión.', 'info')
+        return redirect(url_for('registro')) # O donde quieras redirigir
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        # --- Validación Básica del Formulario ---
+        if not username or not password:
+            flash('Nombre de usuario y contraseña son requeridos.', 'danger')
+            return render_template('login.html', username=username) # Pasar username de vuelta
+
+        # --- Buscar Usuario en la DB ---
+        user = User.query.filter_by(username=username).first()
+
+        # --- Verificar Usuario y Contraseña ---
+        if user and user.check_password(password): # check_password_hash se llama dentro del método del modelo
+            login_user(user) # Usa Flask-Login para iniciar la sesión del usuario
+            flash('¡Inicio de sesión exitoso!', 'success')
+
+            # Redirigir al usuario a la página que intentaba acceder antes de requerir login
+            # Flask-Login guarda la URL original en request.args.get('next')
+            next_page = request.args.get('next')
+            # Si no hay 'next' (ej. fue directo a /login), redirige a una página por defecto
+            return redirect(next_page or url_for('registro')) # Redirige al registro después de login
+
+        else:
+            # Si la verificación falla
+            flash('Nombre de usuario o contraseña incorrectos.', 'danger')
+            return render_template('login.html', username=username) # Vuelve a renderizar con error
+
+    # Método GET: Simplemente muestra el formulario de login
+    return render_template('login.html')
+
+# --- Ruta para Cierre de Sesión ---
+@app.route('/logout')
+@login_required # Solo puedes cerrar sesión si ya estás logueado
+def logout():
+    logout_user() # Usa Flask-Login para cerrar la sesión
+    flash('Has cerrado sesión correctamente.', 'success')
+    return redirect(url_for('login')) # Redirige a la página de login o inicio
 
 if __name__ == '__main__':
     # Configuración de host y puerto, y modo debug desde variables de entorno

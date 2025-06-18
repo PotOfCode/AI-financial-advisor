@@ -33,6 +33,22 @@
             z-index: 1000;
         }
 
+        .mobile-menu a { /* Estilo para los links del menú móvil */
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            display: block; /* Cada link en su propia línea */
+        }
+
+        mobile-menu a:last-child {
+            border-bottom: none; /* Eliminar borde inferior del último link */
+        }
+
+        .mobile-menu a:hover {
+            background-color: #f8f9fa;
+        }
+
         @media (max-width: 768px) {
             .nav-links {
                 display: none;
@@ -52,20 +68,60 @@
                 display: none !important;
             }
         }
+        nav {
+            display: flex;
+            justify-content: flex-end; /* Alinea los items a la derecha */
+            align-items: center;
+            background-color: #f8f9fa;
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative; /* Necesario para el menú móvil absoluto */
+        }
+
+         nav a {
+            text-decoration: none;
+            color: #333;
+            padding: 5px 10px;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: #007bff; /* Color al pasar el ratón */
+        }
     </style>
 </head>
 <body>
     <nav>
         <button class="nav-toggle" aria-label="Menú">☰</button>
         <div class="nav-links">
-            <a href="{{ url_for('registro') }}">Registro</a>
-            <a href="{{ url_for('asistente') }}">Asistente IA</a>
-            <a href="{{ url_for('analizador') }}">Analizador</a>
+            {% if current_user.is_authenticated %}
+                {# Links para usuario logueado #}
+                <a href="{{ url_for('registro') }}">Registro</a>
+                <a href="{{ url_for('asistente') }}">Asistente IA</a>
+                <a href="{{ url_for('analizador') }}">Analizador</a>
+                {# Puedes añadir un link a un perfil de usuario si creas esa ruta #}
+                {# <a href="{{ url_for('perfil') }}">Perfil</a> #}
+                <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+            {% else %}
+                {# Links para usuario no logueado #}
+                <a href="{{ url_for('login') }}">Iniciar Sesión</a>
+                <a href="{{ url_for('registro_usuario') }}">Registrarse</a>
+                {# Puedes añadir un link a una página de inicio pública si tienes una #}
+                {# <a href="{{ url_for('index') }}">Inicio</a> #}
+            {% endif %}
         </div>
         <div class="mobile-menu">
-            <a href="{{ url_for('registro') }}">Registro</a>
-            <a href="{{ url_for('asistente') }}">Asistente IA</a>
-            <a href="{{ url_for('analizador') }}">Analizador</a>
+             {% if current_user.is_authenticated %}
+                <a href="{{ url_for('registro') }}">Registro</a>
+                <a href="{{ url_for('asistente') }}">Asistente IA</a>
+                <a href="{{ url_for('analizador') }}">Analizador</a>
+                {# <a href="{{ url_for('perfil') }}">Perfil</a> #}
+                <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Iniciar Sesión</a>
+                <a href="{{ url_for('registro_usuario') }}">Registrarse</a>
+                {# <a href="{{ url_for('index') }}">Inicio</a> #}
+            {% endif %}
         </div>
     </nav>
     <div class="container">
@@ -95,6 +151,41 @@
                 document.querySelector('.mobile-menu').classList.remove('active');
             }
         });
+        
+        const navToggle = document.querySelector('.nav-toggle');
+        const mobileMenu = document.querySelector('.mobile-menu');
+
+        if (navToggle && mobileMenu) { // Verificar que los elementos existen
+            navToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                mobileMenu.classList.toggle('active');
+            });
+
+            // Cerrar menú al hacer click fuera
+            document.addEventListener('click', (e) => {
+                if (mobileMenu.classList.contains('active') &&
+                    !e.target.closest('.mobile-menu') &&
+                    !e.target.closest('.nav-toggle')) {
+                    mobileMenu.classList.remove('active');
+                }
+            });
+
+            // Cerrar menú al cambiar de tamaño de pantalla
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) {
+                    mobileMenu.classList.remove('active');
+                }
+            });
+
+             // Cerrar menú al hacer clic en un enlace (navegación dentro de la misma página) - opcional
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.remove('active');
+                });
+            });
+        } else {
+            console.error("Error: Elementos de menú móvil no encontrados.");
+        }
     </script>
 </body>
 </html>

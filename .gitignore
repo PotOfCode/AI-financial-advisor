@@ -1,9 +1,5 @@
 .venv/
-venv/
 .env
-env/
-/migrations/versions/*
 site.db
 __pycache__/
 *.pyc
-migrations/
