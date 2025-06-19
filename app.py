@@ -32,9 +32,12 @@ EXCHANGERATE_API_KEY = os.environ.get('CHANGE_API_KEY')
 
 #* --- Configuración de la Base de Datos SQLite ---
 database_url = os.environ.get('DATABASE_URL')
-if database_url is None:
+if database_url:
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+else:
     basedir = os.path.abspath(os.path.dirname(__file__))
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'site.db')
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
