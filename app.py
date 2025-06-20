@@ -62,7 +62,7 @@ class User(UserMixin, db.Model): # <-- Añadir UserMixin
     id = db.Column(db.Integer, primary_key=True) # Clave primaria
     # Cambiamos 'identifier' a 'username' (o podrías usar 'email' y validar formato)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True) # El nombre de usuario para login
-    password_hash = db.Column(db.String(128), nullable=False) # Campo para almacenar la contraseña hasheada
+    password_hash = db.Column(db.String(255), nullable=False) # Campo para almacenar la contraseña hasheada
 
     # Relación con FinancialData (sin cambios aquí)
     financial_data = db.relationship('FinancialData', backref='owner', uselist=False, lazy='joined')
