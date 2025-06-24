@@ -373,15 +373,15 @@ def analizador():
     user_financial_data = current_user.financial_data
 
     if not user_financial_data:
-        flash('Error interno: No se pudieron cargar tus datos financieros. Intenta registrar tus datos de nuevo.', 'danger')
+        flash('Aún no has registrado tus datos financieros. Por favor, regístralos primero.', 'info')
         # Quizás redirigir a registro o mostrar página de error específica
         return redirect(url_for('registro'))
 
     gastos = {
-        'Comida': user_financial_data.gasto_comida,
-        'Transporte': user_financial_data.gasto_transporte,
-        'Vivienda': user_financial_data.gasto_vivienda,
-        'Otros': user_financial_data.gasto_otros
+        'Comida': user_financial_data.gasto_comida or 0,
+        'Transporte': user_financial_data.gasto_transporte or 0,
+        'Vivienda': user_financial_data.gasto_vivienda or 0,
+        'Otros': user_financial_data.gasto_otros or 0
     }
     ingresos = user_financial_data.ingresos
 
@@ -393,16 +393,22 @@ def analizador():
             etiquetas.append(categoria)
 
     plot_url = None # Inicializa plot_url fuera del bucle
-    if valores: # Genera la gráfica solo si hay valores > 0
-        img = BytesIO()
-        plt.figure(figsize=(8, 8))
-        plt.pie(valores, labels=etiquetas, autopct='%1.1f%%', startangle=140)
-        plt.title('Distribución de Gastos')
-        plt.axis('equal')
-        plt.savefig(img, format='png')
-        plt.close()
-        img.seek(0)
-        plot_url = base64.b64encode(img.getvalue()).decode('utf8')
+    if valores:
+        try: # Añadir un try/except para la generación de la gráfica es buena práctica
+            img = BytesIO()
+            plt.figure(figsize=(8, 8))
+            plt.pie(valores, labels=etiquetas, autopct='%1.1f%%', startangle=140)
+            plt.title('Distribución de Gastos')
+            plt.axis('equal')
+            plt.savefig(img, format='png')
+            plt.close() # Importante cerrar la figura
+            img.seek(0)
+            plot_url = base64.b64encode(img.getvalue()).decode('utf8')
+        except Exception as e:
+             # Puedes loguear el error e o mostrar un mensaje
+             print(f"Error al generar la gráfica: {e}")
+             flash('Error al generar la gráfica de gastos.', 'warning')
+             plot_url = None
 
         presupuesto = {
             'necesidades': ingresos * 0.5,
